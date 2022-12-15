@@ -5,17 +5,7 @@
 // For more information on background script,
 // See https://developer.chrome.com/extensions/background_pages
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'GREETINGS') {
-    const message: string = `Hi ${
-      sender.tab ? 'Con' : 'Pop'
-    }, my name is Bac. I am from Background. It's great to hear from you.`;
+const address = 'localhost:1234';
+const ws = new WebSocket(`ws://${address}`);
 
-    // Log message coming from the `request` parameter
-    console.log(request.payload.message);
-    // Send a response message
-    sendResponse({
-      message,
-    });
-  }
-});
+console.log('opened websocket', ws);

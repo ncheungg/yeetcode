@@ -11,34 +11,52 @@
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
-// Log `title` of current active web page
-const pageTitle: string =
-  document.head.getElementsByTagName('title')[0].innerHTML;
-console.log(
-  `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
-);
+const getSubmitButtonIdle = (): Element =>
+  document.getElementsByClassName(
+    'px-3 py-1.5 font-medium items-center whitespace-nowrap transition-all focus:outline-none inline-flex text-label-r bg-green-s dark:bg-dark-green-s hover:bg-green-3 dark:hover:bg-dark-green-3 rounded-lg'
+  )[0];
 
-// Communicate with background file by sending a message
-chrome.runtime.sendMessage(
-  {
-    type: 'GREETINGS',
-    payload: {
-      message: 'Hello, my name is Con. I am from ContentScript.',
-    },
-  },
-  (response) => {
-    console.log(response.message);
+const getSubmitButtonRunning = (): Element =>
+  document.getElementsByClassName(
+    'px-3 py-1.5 font-medium items-center whitespace-nowrap transition-all focus:outline-none cursor-not-allowed opacity-50 inline-flex text-label-r bg-green-s dark:bg-dark-green-s hover:bg-green-3 dark:hover:bg-dark-green-3 rounded-lg'
+  )[0];
+
+const answerIsAccepted = (): boolean =>
+  document.getElementsByClassName(
+    'text-green-s dark:text-dark-green-s flex items-center gap-2 text-[16px] font-medium leading-6'
+  )[0] !== undefined;
+
+const submitButton = getSubmitButtonIdle();
+
+console.log(submitButton);
+
+// resolves submit button change (checks when solution has finished submitting)
+const resolveSubmitButtonChange = (mutationRecords: MutationRecord[]): void => {
+  for (const mutation of mutationRecords) {
+    console.log(mutation.target);
+
+    // make sure its actually done submitting
+    if (mutation.target === getSubmitButtonRunning()) continue;
+    if (mutation.target !== getSubmitButtonIdle()) continue;
+
+    console.log('finished submitting');
+    console.log('accepted:', answerIsAccepted());
+
+    // stops observing until the next button click
+    observer.disconnect();
+    break;
   }
-);
+};
 
-// Listen for message
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'COUNT') {
-    console.log(`Current count is ${request.payload.count}`);
-  }
+// observer that checks when submit button has changed
+const observer = new MutationObserver(resolveSubmitButtonChange);
 
-  // Send an empty response
-  // See https://github.com/mozilla/webextension-polyfill/issues/130#issuecomment-531531890
-  sendResponse({});
-  return true;
-});
+const handleSubmitButtonClick = () => {
+  console.log('submitted');
+
+  // begin observing
+  observer.observe(submitButton, { attributeFilter: ['class'] });
+};
+
+// Event listeners
+submitButton.addEventListener('click', handleSubmitButtonClick);
