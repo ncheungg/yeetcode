@@ -11,24 +11,32 @@
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
-const getSubmitButtonIdle = (): Element =>
-  document.getElementsByClassName(
-    'px-3 py-1.5 font-medium items-center whitespace-nowrap transition-all focus:outline-none inline-flex text-label-r bg-green-s dark:bg-dark-green-s hover:bg-green-3 dark:hover:bg-dark-green-3 rounded-lg'
-  )[0];
+const getSubmitButton = (): Element | undefined => {
+  for (const btn of document.getElementsByTagName('button')) {
+    if (btn.innerText === 'Submit') return btn;
+  }
+};
 
-const getSubmitButtonRunning = (): Element =>
-  document.getElementsByClassName(
-    'px-3 py-1.5 font-medium items-center whitespace-nowrap transition-all focus:outline-none cursor-not-allowed opacity-50 inline-flex text-label-r bg-green-s dark:bg-dark-green-s hover:bg-green-3 dark:hover:bg-dark-green-3 rounded-lg'
-  )[0];
+const submitButtonIsRunning = (): boolean => {
+  const submitButton = getSubmitButton() as Element;
+  return (
+    submitButton.className.includes('cursor-not-allowed') &&
+    submitButton.className.includes('opacity-50')
+  );
+};
 
+// accepted checkmark is seen && in submissions tab
 const answerIsAccepted = (): boolean =>
   document.getElementsByClassName(
-    'text-green-s dark:text-dark-green-s flex items-center gap-2 text-[16px] font-medium leading-6'
-  )[0] !== undefined;
+    'text-xl font-medium text-red-s dark:text-dark-red-s'
+  )[0] === undefined;
 
-const submitButton = getSubmitButtonIdle();
+const submitButton = getSubmitButton();
 const sectionTabs = document.getElementsByClassName(
   'flex h-11 w-full items-center pt-2'
+)[0];
+const hintButton = document.getElementsByClassName(
+  'px-2 py-1 hover:text-blue-s dark:hover:text-dark-blue-s cursor-pointer rounded transition-colors text-gray-6 dark:text-dark-gray-6 hover:bg-fill-3 dark:hover:bg-dark-fill-3'
 )[0];
 
 // resolves submit button change (checks when solution has finished submitting)
@@ -37,8 +45,9 @@ const resolveSubmitButtonChange = (mutationRecords: MutationRecord[]): void => {
     console.log(mutation.target);
 
     // make sure its actually done submitting
-    if (mutation.target === getSubmitButtonRunning()) continue;
-    if (mutation.target !== getSubmitButtonIdle()) continue;
+    if (submitButtonIsRunning()) continue;
+    // if (mutation.target === getSubmitButtonRunning()) continue;
+    // if (mutation.target !== getSubmitButtonIdle()) continue;
 
     console.log('finished submitting');
     console.log('accepted:', answerIsAccepted());
@@ -74,11 +83,28 @@ const handleSubmitButtonClick = () => {
   console.log('submitted');
 
   // begin observing
-  submitButtonObserver.observe(submitButton, { attributeFilter: ['class'] });
+  submitButtonObserver.observe(submitButton as Node, {
+    attributeFilter: ['class'],
+  });
+};
+
+// if hintPopup was not present when button was clicked,
+// then user clicked it to show hintPopup
+const handleHintButtonClick = () => {
+  const hintPopup = document.getElementsByClassName(
+    'arrow-bottom fixed z-modal md:block shadow-level3 dark:shadow-dark-level3 w-[228px] p-4 rounded-lg bg-layer-2 dark:bg-dark-layer-2 opacity-100 translate-y-0'
+  )[0];
+  if (hintPopup !== undefined) return;
+
+  console.log('hint');
 };
 
 // Event listeners
-submitButton.addEventListener('click', handleSubmitButtonClick);
+(submitButton as Node).addEventListener('click', handleSubmitButtonClick);
+
+if (hintButton)
+  (hintButton as Node).addEventListener('click', handleHintButtonClick);
+
 sectionTabsObserver.observe(sectionTabs as Element, {
   childList: true,
   subtree: true,
