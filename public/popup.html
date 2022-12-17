@@ -2,22 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>My Chrome Extension</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>yeetcode</title>
     <link rel="stylesheet" href="popup.css" />
+    <link rel="stylesheet" href="skeleton.css" />
+    <link rel="stylesheet" href="normalize.css" />
   </head>
   <body>
-    <div class="app">
-      <p class="counter-label">Counter</p>
-      <div id="counter" class="counter"></div>
-      <div class="button-container">
-        <button id="decrementBtn" class="button">-</button>
-        <button id="incrementBtn" class="button">+</button>
+    <div class="container" style="padding: 1em">
+      <h4 style="margin-bottom: 0">yeetcode</h4>
+      <p>Leetcode with friends</p>
+
+      <div class="not-on-leetcode">
+        To start a room, go to
+        <a
+          href="https://leetcode.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >leetcode.com</a
+        >
       </div>
 
-      <hr class="divider" />
+      <div class="not-in-room">
+        <button class="button-primary">Create room</button>
+      </div>
 
-      <p class="title">Chrome Extension is Ready!!!</p>
-      <p class="subtitle">Start by updating <code>popup.html</code></p>
+      <div class="in-room">
+        <button class="button-primary">Disconnect</button>
+      </div>
     </div>
 
     <script src="popup.js"></script>

@@ -16,7 +16,7 @@
     "default_title": "yeetcode",
     "default_popup": "popup.html"
   },
-  "permissions": ["storage"],
+  "permissions": ["storage", "activeTab", "tabs"],
   "content_scripts": [
     {
       "matches": ["*://*.leetcode.com/problems/*"],

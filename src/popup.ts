@@ -10,6 +10,31 @@ import './popup.css';
   // To get storage access, we have to mention it in `permissions` property of manifest.json file
   // More information on Permissions can we found at
   // https://developer.chrome.com/extensions/declare_permissions
+
+  // display UI elements based on the current URL
+  async function getTab() {
+    let queryOptions = { active: true, currentWindow: true };
+    let tabs = await chrome.tabs.query(queryOptions);
+    return tabs[0].url;
+  }
+  chrome.tabs.onUpdated.addListener(async function () {
+    console.log('TAB UPDATED');
+    let url = await getTab();
+    console.log(url);
+  });
+
+  // async function getCurrentTab() {
+  //   let queryOptions = { active: true, currentWindow: true };
+  //   let [tab] = await chrome.tabs.query(queryOptions);
+  //   return tab;
+  // }
+
+  // const tab = getCurrentTab();
+  // tab.then((data) => console.log(data));
+
+  //   const activeTabId = Number(new URLSearchParams(location.search).get('tabId'));
+  // chrome.scripting.executeScript({ target: { tabId: activeTabId }, function: foo });
+
   const counterStorage = {
     get: (cb: (count: number) => void) => {
       chrome.storage.sync.get(['count'], (result) => {

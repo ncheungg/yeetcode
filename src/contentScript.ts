@@ -27,8 +27,9 @@ const answerIsAccepted = (): boolean =>
   )[0] !== undefined;
 
 const submitButton = getSubmitButtonIdle();
-
-console.log(submitButton);
+const sectionTabs = document.getElementsByClassName(
+  'flex h-11 w-full items-center pt-2'
+)[0];
 
 // resolves submit button change (checks when solution has finished submitting)
 const resolveSubmitButtonChange = (mutationRecords: MutationRecord[]): void => {
@@ -43,20 +44,43 @@ const resolveSubmitButtonChange = (mutationRecords: MutationRecord[]): void => {
     console.log('accepted:', answerIsAccepted());
 
     // stops observing until the next button click
-    observer.disconnect();
+    submitButtonObserver.disconnect();
     break;
   }
 };
 
-// observer that checks when submit button has changed
-const observer = new MutationObserver(resolveSubmitButtonChange);
+// checks whether 'discussion' or 'solutions' tab has been clicked
+const resolveSectionTabsChange = (mutationRecords: MutationRecord[]): void => {
+  for (const mutation of mutationRecords) {
+    if (mutation.target === null) continue;
+    if ((mutation.target as HTMLElement).className.includes('cursor-pointer'))
+      continue;
+
+    if (mutation.target.textContent?.startsWith('Discussion')) {
+      console.log('opened discussions');
+    }
+
+    if (mutation.target.textContent?.startsWith('Solutions')) {
+      console.log('opened solutions');
+    }
+  }
+};
+
+// observers
+const submitButtonObserver = new MutationObserver(resolveSubmitButtonChange);
+const sectionTabsObserver = new MutationObserver(resolveSectionTabsChange);
 
 const handleSubmitButtonClick = () => {
   console.log('submitted');
 
   // begin observing
-  observer.observe(submitButton, { attributeFilter: ['class'] });
+  submitButtonObserver.observe(submitButton, { attributeFilter: ['class'] });
 };
 
 // Event listeners
 submitButton.addEventListener('click', handleSubmitButtonClick);
+sectionTabsObserver.observe(sectionTabs as Element, {
+  childList: true,
+  subtree: true,
+  attributeFilter: ['class'],
+});
