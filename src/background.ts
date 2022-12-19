@@ -24,6 +24,7 @@ chrome.tabs.onActivated.addListener(async () => {
   console.log(url);
 });
 
+// TODO:: call this function on message recieved from popup
 const injectSidebar = async () => {
   let queryOptions = { active: true, lastFocusedWindow: true };
   // `tab` will either be a `tabs.Tab` instance or `undefined`.
