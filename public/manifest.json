@@ -12,10 +12,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "action": {
-    "default_title": "yeetcode",
-    "default_popup": "popup.html"
-  },
+  "action": {},
   "permissions": ["storage", "activeTab", "tabs"],
   "content_scripts": [
     {

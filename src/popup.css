@@ -3,13 +3,13 @@ body {
 }
 
 .not-on-leetcode {
-  /* display: none; */
+  display: none;
 }
 
-.not-in-room {
+/* .not-in-room {
   display: none;
 }
 
 .in-room {
   display: none;
-}
+} */
