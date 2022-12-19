@@ -3,6 +3,11 @@
 import './popup.css';
 import { PopupState, Message, MessageType } from './types';
 
+function injectSidebar() {
+  console.log('reached');
+  // send message to background to inject sideBar
+}
+
 (function () {
   // We will make use of Storage API to get and store `count` value
   // More information on Storage API can we found at
@@ -10,6 +15,13 @@ import { PopupState, Message, MessageType } from './types';
   // To get storage access, we have to mention it in `permissions` property of manifest.json file
   // More information on Permissions can we found at
   // https://developer.chrome.com/extensions/declare_permissions
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document
+      .getElementById('create-room')
+      ?.addEventListener('click', injectSidebar);
+  });
+
   // display UI elements based on the current URL
   // const counterStorage = {
   //   get: (cb: (count: number) => void) => {
