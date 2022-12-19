@@ -23,3 +23,36 @@ chrome.tabs.onActivated.addListener(async () => {
   const url = await getTab();
   console.log(url);
 });
+
+// var x = document.getElementById("myBtn");
+
+// chrome.action.onClicked.addListener((tab) => {
+//   console.log(tab)
+//   chrome.scripting.executeScript({
+
+//     target: { tabId: tab.id as number},
+//     files: ['sidebar.ts']
+//   });
+// });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('boo');
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  console.log(tab);
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id as number },
+    files: ['sidebar.ts'],
+  });
+});
+
+const injectSidebar = async () => {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  chrome.scripting.executeScript({
+    target: { tabId: tab?.id as number },
+    files: ['sidebar.ts'],
+  });
+};
