@@ -8,7 +8,29 @@ export enum MessageType {
   TabChange = 'tab_change',
 }
 
-export interface Message {
+export interface PopupMessage {
   type: MessageType;
   data: any;
+}
+
+export enum SocketMessageType {
+  Create = 'create',
+  Join = 'join',
+  Leave = 'leave',
+  Message = 'message',
+  Action = 'action',
+}
+
+export interface SocketMessageParams {
+  roomID?: string;
+  message?: string | UserInfo;
+}
+
+export interface SocketMessage {
+  type: SocketMessageType;
+  params: SocketMessageParams;
+}
+
+export interface UserInfo {
+  userID: string;
 }
