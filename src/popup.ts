@@ -1,11 +1,17 @@
 'use strict';
 
 import './popup.css';
-import { PopupState, Message, MessageType } from './types';
+import { SocketMessage, SocketMessageType } from './types';
 
 function injectSidebar() {
-  console.log('reached');
-  // send message to background to inject sideBar
+  const message: SocketMessage = {
+    type: SocketMessageType.Create,
+    params: {},
+  };
+
+  chrome.runtime.sendMessage(message, function (response) {
+    console.log(response);
+  });
 }
 
 (function () {
@@ -16,11 +22,9 @@ function injectSidebar() {
   // More information on Permissions can we found at
   // https://developer.chrome.com/extensions/declare_permissions
 
-  document.addEventListener('DOMContentLoaded', function () {
-    document
-      .getElementById('create-room')
-      ?.addEventListener('click', injectSidebar);
-  });
+  document
+    .getElementById('create-room')
+    ?.addEventListener('click', injectSidebar);
 
   // display UI elements based on the current URL
   // const counterStorage = {

@@ -1,12 +1,14 @@
 'use strict';
 
-import { PopupState, Message, MessageType } from './types';
+import { PopupState, MessageType, SocketMessageType } from './types';
 import { HOST, PORT } from './consts';
 
 // states
 let urlState: URL;
 let isInRoomState: boolean = false;
 let popupState: PopupState = PopupState.NotLeetcode;
+let userID: string = '';
+// todo: add state
 
 // With background scripts you can communicate with popup
 // and contentScript files.
@@ -50,14 +52,59 @@ chrome.tabs.onActivated.addListener(async () => {
   // chrome.runtime.sendMessage(message);
 });
 
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  // console.log(
+  //   sender.tab
+  //     ? 'from a content script:' + sender.tab.url
+  //     : 'from the extension'
+  // );
+
+  switch (request.type) {
+    case SocketMessageType.Create:
+      // TODO: send room creation request to backend and check if successful
+      const roomCreated = true; // replace
+
+      if (!roomCreated) {
+        sendResponse({ status: 'room not created' });
+        return;
+      }
+
+      injectSidebar().then(function (result) {
+        if (result) {
+          sendResponse({ status: 'could not create chat' });
+        } else {
+          sendResponse({ status: 'room created' });
+        }
+      });
+
+      break;
+    case SocketMessageType.Join:
+      break;
+    case SocketMessageType.Leave:
+      break;
+    case SocketMessageType.Message:
+      break;
+    case SocketMessageType.Action:
+      break;
+    default:
+      break;
+  }
+});
+
 // TODO:: call this function on message recieved from popup
 const injectSidebar = async () => {
-  let queryOptions = { active: true, lastFocusedWindow: true };
-  // `tab` will either be a `tabs.Tab` instance or `undefined`.
-  let [tab] = await chrome.tabs.query(queryOptions);
-  console.log(tab);
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id as number },
-    files: ['sidebar.js'],
-  });
+  try {
+    let queryOptions = { active: true, lastFocusedWindow: true };
+    let [tab] = await chrome.tabs.query(queryOptions);
+    console.log(tab);
+    if (!tab) return false;
+
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id as number },
+      files: ['sidebar.js'],
+    });
+    return true;
+  } catch {
+    return false;
+  }
 };
