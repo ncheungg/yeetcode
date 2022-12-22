@@ -1,6 +1,7 @@
 'use strict';
 
 import { Message, MessageType, UserInfo } from './types';
+
 import { HOST, PORT } from './consts';
 
 // states
