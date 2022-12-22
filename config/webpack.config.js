@@ -13,6 +13,7 @@ const config = (env, argv) =>
       contentScript: PATHS.src + '/contentScript.ts',
       background: PATHS.src + '/background.ts',
       sidebar: PATHS.src + '/sidebar.ts',
+      'userid-script': PATHS.src + '/userid-script.ts',
     },
     devtool: argv.mode === 'production' ? false : 'source-map',
   });

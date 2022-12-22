@@ -19,7 +19,12 @@
     {
       "matches": ["*://*.leetcode.com/problems/*"],
       "js": ["contentScript.js"],
-      "run_at": "document_end"
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://*.leetcode.com/*"],
+      "js": ["userid-script.js"],
+      "run_at": "document_idle"
     }
   ]
 }

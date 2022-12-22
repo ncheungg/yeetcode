@@ -4,19 +4,20 @@ import { PopupState, MessageType, SocketMessageType } from './types';
 import { HOST, PORT } from './consts';
 
 // states
-let urlState: URL;
+// let urlState: URL;
 let isInRoomState: boolean = false;
 let popupState: PopupState = PopupState.NotLeetcode;
-let userID: string = '';
 // todo: add state
+let userID: string | undefined = '';
+let avatarImgUrl: string | null;
 
 // With background scripts you can communicate with popup
 // and contentScript files.
 // For more information on background script,
 // See https://developer.chrome.com/extensions/background_pages
 
-// const ws = new WebSocket(`ws://${HOST}:${PORT}`);
-// console.log('opened websocket', ws);
+const ws = new WebSocket(`ws://${HOST}:${PORT}`);
+console.log('opened websocket', ws);
 
 // programmatically switch popup file based on the active tab
 const getTab = async () => {
@@ -27,29 +28,20 @@ const getTab = async () => {
   return tabs[0].url;
 };
 chrome.tabs.onActivated.addListener(async () => {
-  const url = await getTab();
-  console.log(url);
-  if (!url) return;
+  const tabUrl = await getTab();
+  if (!tabUrl) return;
 
-  urlState = new URL(url);
+  const url = new URL(tabUrl);
 
-  if (urlState.hostname === 'leetcode.com' && isInRoomState) {
-    // popupState = PopupState.InRoom;
+  if (url.hostname === 'leetcode.com' && isInRoomState) {
     chrome.action.setPopup({ popup: 'in-room.html' });
-  } else if (urlState.hostname === 'leetcode.com') {
-    // popupState = PopupState.NotInRoom;
+  } else if (url.hostname === 'leetcode.com' && userID && avatarImgUrl) {
     chrome.action.setPopup({ popup: 'not-in-room.html' });
+  } else if (url.hostname === 'leetcode.com') {
+    chrome.action.setPopup({ popup: 'not-logged-in.html' });
   } else {
-    // popupState = PopupState.NotLeetcode;
     chrome.action.setPopup({ popup: 'not-leetcode.html' });
   }
-
-  // const message: Message = {
-  //   type: MessageType.TabChange,
-  //   data: popupState,
-  // };
-
-  // chrome.runtime.sendMessage(message);
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
