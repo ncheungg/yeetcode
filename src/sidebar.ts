@@ -42,6 +42,23 @@ function recieveMessage(username: string, timestamp: Date, text: string) {
   main.scrollTop += 500;
 }
 
+function createReadyButton() {
+  var form = document.createElement('form');
+
+  var button = document.createElement('button');
+  button.setAttribute('type', 'submit');
+  button.classList.add('msger-send-btn');
+  button.appendChild(document.createTextNode('Ready'));
+
+  form.appendChild(button);
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    // TODO: ready state
+  });
+  return form;
+}
 function createMessage(
   username: string,
   timestamp: Date,
@@ -148,9 +165,11 @@ function createHeader() {
   divTitle.classList.add('msger-header-title');
   divTitle.appendChild(document.createTextNode('Yeetcode'));
 
-  var button = document.createElement('button');
-  button.classList.add('fas');
-  button.classList.add('fa-link');
+  //   var button = document.createElement('button');
+  // //   button.classList.add('fas');
+  // //   button.classList.add('fa-link');
+  //   button.appendChild(document.createTextNode("Ready"));
+  var button = createReadyButton();
 
   var divLink = document.createElement('div');
   divLink.classList.add('msger-header-options');
