@@ -9,9 +9,9 @@ let isInRoomState: boolean = false;
 let url: URL | undefined;
 let userInfo: UserInfo | undefined;
 
-// // connect to websocket
-// const ws = new WebSocket(`ws://${HOST}:${PORT}`);
-// console.log('opened websocket', ws);
+// connect to websocket
+const ws = new WebSocket(`ws://${HOST}:${PORT}`);
+console.log('opened websocket', ws);
 
 // programmatically switch popup file based on states
 const switchPopup = (): void => {
@@ -79,27 +79,27 @@ chrome.runtime.onMessage.addListener(
         break;
 
       case MessageType.Hint:
-        console.log('user clicked hint!');
+        ws.send(JSON.stringify(request));
         break;
 
       case MessageType.Submit:
-        console.log('user submitted!');
+        ws.send(JSON.stringify(request));
         break;
 
       case MessageType.Finished:
-        console.log('user finished!');
+        ws.send(JSON.stringify(request));
         break;
 
       case MessageType.Failed:
-        console.log('user failed!');
+        ws.send(JSON.stringify(request));
         break;
 
       case MessageType.Discussion:
-        console.log('user clicked discussions!');
+        ws.send(JSON.stringify(request));
         break;
 
       case MessageType.Solutions:
-        console.log('user clicked solutions!');
+        ws.send(JSON.stringify(request));
         break;
     }
   }
