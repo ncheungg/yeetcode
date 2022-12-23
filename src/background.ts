@@ -1,26 +1,33 @@
 'use strict';
 
-import { PopupState, MessageType, SocketMessageType } from './types';
+import { Message, MessageType, UserInfo } from './types';
 import { HOST, PORT } from './consts';
 
 // states
-// let urlState: URL;
 let isInRoomState: boolean = false;
-let popupState: PopupState = PopupState.NotLeetcode;
-// todo: add state
-let userID: string | undefined = '';
-let avatarImgUrl: string | null;
 
-// With background scripts you can communicate with popup
-// and contentScript files.
-// For more information on background script,
-// See https://developer.chrome.com/extensions/background_pages
+let url: URL | undefined;
+let userInfo: UserInfo | undefined;
 
-const ws = new WebSocket(`ws://${HOST}:${PORT}`);
-console.log('opened websocket', ws);
+// // connect to websocket
+// const ws = new WebSocket(`ws://${HOST}:${PORT}`);
+// console.log('opened websocket', ws);
 
-// programmatically switch popup file based on the active tab
-const getTab = async () => {
+// programmatically switch popup file based on states
+const switchPopup = (): void => {
+  if (!url) return;
+
+  if (url.hostname === 'leetcode.com' && isInRoomState) {
+    chrome.action.setPopup({ popup: 'in-room.html' });
+  } else if (url.hostname === 'leetcode.com' && userInfo?.userId) {
+    chrome.action.setPopup({ popup: 'not-in-room.html' });
+  } else if (url.hostname === 'leetcode.com') {
+    chrome.action.setPopup({ popup: 'not-logged-in.html' });
+  } else {
+    chrome.action.setPopup({ popup: 'not-leetcode.html' });
+  }
+};
+const getTab = async (): Promise<string | undefined> => {
   const tabs = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true,
@@ -31,28 +38,16 @@ chrome.tabs.onActivated.addListener(async () => {
   const tabUrl = await getTab();
   if (!tabUrl) return;
 
-  const url = new URL(tabUrl);
+  url = new URL(tabUrl);
 
-  if (url.hostname === 'leetcode.com' && isInRoomState) {
-    chrome.action.setPopup({ popup: 'in-room.html' });
-  } else if (url.hostname === 'leetcode.com' && userID && avatarImgUrl) {
-    chrome.action.setPopup({ popup: 'not-in-room.html' });
-  } else if (url.hostname === 'leetcode.com') {
-    chrome.action.setPopup({ popup: 'not-logged-in.html' });
-  } else {
-    chrome.action.setPopup({ popup: 'not-leetcode.html' });
-  }
+  switchPopup();
 });
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  // console.log(
-  //   sender.tab
-  //     ? 'from a content script:' + sender.tab.url
-  //     : 'from the extension'
-  // );
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  const { type, params } = request as Message;
 
   switch (request.type) {
-    case SocketMessageType.Create:
+    case MessageType.Create:
       // TODO: send room creation request to backend and check if successful
       const roomCreated = true; // replace
 
@@ -70,15 +65,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       });
 
       break;
-    case SocketMessageType.Join:
+    case MessageType.Join:
       break;
-    case SocketMessageType.Leave:
+    case MessageType.Leave:
       break;
-    case SocketMessageType.Message:
-      break;
-    case SocketMessageType.Action:
-      break;
-    default:
+
+    // updates userInfo state
+    case MessageType.FetchUserInfo:
+      userInfo = params?.userInfo as UserInfo;
+      switchPopup();
       break;
   }
 });
