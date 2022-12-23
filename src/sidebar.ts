@@ -7,26 +7,30 @@ const message1 = 'message1';
 const user2 = 'you';
 const message2 = 'message2';
 
-var iframe = createIFrame();
-var main = document.createElement('main');
+document.body.style.setProperty('width', '80%');
+
+const iframe = createIFrame();
+document.body.appendChild(iframe);
+
+const main = document.createElement('main');
 addSidebar();
 
-export function sendMessage(text: string, username: string = user2) {
-  const message = createMessage(username, new Date(), text ? text : '');
-  main.appendChild(message);
-  main.scrollTop += 500;
-}
+function addSidebar() {
+  addStyleSheet(iframe);
 
-export function recieveMessage(
-  text: string,
-  username: string,
-  timestamp: Date,
-  italics: boolean = false
-) {
-  if (!timestamp) return;
-  const message = createMessage(username, timestamp, text, true, italics);
-  main.appendChild(message);
-  main.scrollTop += 500;
+  var section = document.createElement('section');
+  section.classList.add('msger');
+
+  var header = createHeader();
+  section.appendChild(header);
+
+  var main = createMain();
+  section.appendChild(main);
+
+  var form = createForm();
+  section.appendChild(form);
+
+  iframe.contentWindow?.document.body.appendChild(section);
 }
 
 function createMessage(
@@ -83,24 +87,21 @@ function createMessage(
   return textDiv;
 }
 
-function addSidebar() {
-  document.body.style.setProperty('width', '80%');
-  document.body.appendChild(iframe);
-  addStyleSheet(iframe);
+export function sendMessage(text: string, username: string = user2) {
+  const message = createMessage(username, new Date(), text);
+  main.appendChild(message);
+  main.scrollTop += 500;
+}
 
-  var section = document.createElement('section');
-  section.classList.add('msger');
-
-  var header = createHeader();
-  section.appendChild(header);
-
-  var main = createMain();
-  section.appendChild(main);
-
-  var form = createForm();
-  section.appendChild(form);
-
-  iframe.contentWindow?.document.body.appendChild(section);
+export function recieveMessage(
+  text: string,
+  username: string,
+  timestamp: Date,
+  italics: boolean = false
+) {
+  const message = createMessage(username, timestamp, text, true, italics);
+  main.appendChild(message);
+  main.scrollTop += 500;
 }
 
 function createReadyButton() {
@@ -122,9 +123,7 @@ function createReadyButton() {
       ts: new Date(),
     };
 
-    chrome.runtime.sendMessage(message, function (response) {
-      console.log(response);
-    });
+    chrome.runtime.sendMessage(message);
   });
   return form;
 }
@@ -167,9 +166,7 @@ function createForm() {
       ts: new Date(),
     };
 
-    chrome.runtime.sendMessage(message, function (response) {
-      console.log(response);
-    });
+    chrome.runtime.sendMessage(message);
 
     sendMessage(text);
 
@@ -198,10 +195,6 @@ function createHeader() {
   divTitle.classList.add('msger-header-title');
   divTitle.appendChild(document.createTextNode('Yeetcode'));
 
-  //   var button = document.createElement('button');
-  // //   button.classList.add('fas');
-  // //   button.classList.add('fa-link');
-  //   button.appendChild(document.createTextNode("Ready"));
   var button = createReadyButton();
 
   var divLink = document.createElement('div');

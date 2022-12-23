@@ -4,7 +4,6 @@ import { Message, MessageParams, MessageType, UserInfo } from './types';
 
 import { HOST, PORT } from './consts';
 
-import { recieveMessage } from './sidebar';
 // states
 let isInRoomState: boolean = false;
 let roomIdState: string | undefined;
@@ -62,7 +61,6 @@ chrome.runtime.onMessage.addListener(
         break;
       case MessageType.Message:
         if (request.params) request.params.userInfo = userInfo;
-
         ws?.send(JSON.stringify(request));
         break;
 
@@ -140,6 +138,8 @@ const reciever = (msg: MessageEvent<any>) => {
     case MessageType.Join:
       break;
     case MessageType.Message:
+      recieveMessage(params?.userInfo?.userId, , ts);
+
       break;
     case MessageType.Leave:
       break;
