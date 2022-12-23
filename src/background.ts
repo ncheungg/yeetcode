@@ -43,40 +43,43 @@ chrome.tabs.onActivated.addListener(async () => {
   switchPopup();
 });
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  const { type, params } = request as Message;
+// handles messages sent by popup, content-scripts, and backend
+chrome.runtime.onMessage.addListener(
+  (request: Message, sender, sendResponse) => {
+    const { type, params } = request;
 
-  switch (request.type) {
-    case MessageType.Create:
-      // TODO: send room creation request to backend and check if successful
-      const roomCreated = true; // replace
+    switch (type) {
+      case MessageType.Create:
+        // TODO: send room creation request to backend and check if successful
+        const roomCreated = true; // replace
 
-      if (!roomCreated) {
-        sendResponse({ status: 'room not created' });
-        return;
-      }
-
-      injectSidebar().then(function (result) {
-        if (result) {
-          sendResponse({ status: 'could not create chat' });
-        } else {
-          sendResponse({ status: 'room created' });
+        if (!roomCreated) {
+          sendResponse({ status: 'room not created' });
+          return;
         }
-      });
 
-      break;
-    case MessageType.Join:
-      break;
-    case MessageType.Leave:
-      break;
+        injectSidebar().then(function (result) {
+          if (result) {
+            sendResponse({ status: 'could not create chat' });
+          } else {
+            sendResponse({ status: 'room created' });
+          }
+        });
 
-    // updates userInfo state
-    case MessageType.FetchUserInfo:
-      userInfo = params?.userInfo as UserInfo;
-      switchPopup();
-      break;
+        break;
+      case MessageType.Join:
+        break;
+      case MessageType.Leave:
+        break;
+
+      // updates userInfo state
+      case MessageType.FetchUserInfo:
+        userInfo = params?.userInfo as UserInfo;
+        switchPopup();
+        break;
+    }
   }
-});
+);
 
 // TODO:: call this function on message recieved from popup
 const injectSidebar = async () => {
