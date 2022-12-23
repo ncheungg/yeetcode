@@ -62,6 +62,7 @@ chrome.runtime.onMessage.addListener(
       case MessageType.Message:
         if (request.params) request.params.userInfo = userInfo;
         ws?.send(JSON.stringify(request));
+
         break;
 
       // updates userInfo state
@@ -100,46 +101,57 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
+const getTabId = async () => {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  const [tab] = await chrome.tabs.query(queryOptions);
+  return tab.id as number;
+};
+
 // TODO:: call this function on message recieved from popup
 const injectSidebar = async () => {
-  try {
-    let queryOptions = { active: true, lastFocusedWindow: true };
-    let [tab] = await chrome.tabs.query(queryOptions);
-    // console.log(tab);
-    if (!tab) return false;
+  let tabId = await getTabId();
 
-    // chrome.scripting.insertCSS({
-    //   target: { tabId: tab.id as number },
-    //   files: ['sidebar.css'],
-    // });
+  // chrome.scripting.insertCSS({
+  //   target: { tabId: tab.id as number },
+  //   files: ['sidebar.css'],
+  // });
 
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id as number },
-      files: ['sidebar.js'],
-    });
+  chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['sidebar.js'],
+  });
+};
 
-    return true;
-  } catch {
-    return false;
-  }
+const sendMessageToChat = async (message: Message) => {
+  let tabId = await getTabId();
+  // const message: Message = {
+  //   type: MessageType.ChatMessage,
+  //   params: { message: text, userInfo: { userId } },
+  //   ts,
+  // };
+  await chrome.tabs.sendMessage(tabId, message);
 };
 
 const reciever = (msg: MessageEvent<any>) => {
   // TODO
   console.log('handle messages', msg);
 
-  const { type, params, ts } = JSON.parse(msg.data) as Message;
+  const message = JSON.parse(msg.data) as Message;
+  const { type, params, ts } = message;
 
   switch (type) {
     case MessageType.Create:
       const { roomId } = params as MessageParams;
       roomIdState = roomId;
+      sendMessageToChat(message);
       break;
     case MessageType.Join:
       break;
     case MessageType.Message:
-      recieveMessage(params?.userInfo?.userId, , ts);
-
+      sendMessageToChat(message);
+      break;
+    case MessageType.Action:
+      sendMessageToChat(message);
       break;
     case MessageType.Leave:
       break;
