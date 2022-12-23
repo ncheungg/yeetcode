@@ -21,12 +21,25 @@ const getUserInfo = (): UserInfo => {
   stylesheet.remove();
 
   // on load grab the leetcode username
-  const avatarUrl: string | null = document
-    .getElementsByClassName('h-6 w-6 rounded-full object-cover')[0]
-    ?.getAttribute('src');
+  const avatarElement = document.getElementsByClassName(
+    'h-6 w-6 rounded-full object-cover'
+  )[0];
+
+  const avatarUrl: string | null = avatarElement?.getAttribute('src');
+
+  const avatarButton =
+    avatarElement.parentElement?.parentElement?.parentElement;
+  avatarButton?.click();
+
+  const userNameElement = document.getElementsByClassName(
+    'relative flex h-14 w-14 shrink-0 cursor-pointer'
+  )[0];
+
   const userId: string | undefined =
     document.getElementsByClassName('user-name__35Mk')[0]?.textContent ||
-    avatarUrl?.split('/')[4];
+    userNameElement?.getAttribute('href')?.split('/')[1];
+
+  avatarButton?.click();
 
   // sends a message to background js with avatar and userId
   const userInfo: UserInfo = { userId, avatarUrl };
