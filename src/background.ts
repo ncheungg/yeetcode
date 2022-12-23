@@ -77,6 +77,30 @@ chrome.runtime.onMessage.addListener(
         userInfo = params?.userInfo as UserInfo;
         switchPopup();
         break;
+
+      case MessageType.Hint:
+        console.log('user clicked hint!');
+        break;
+
+      case MessageType.Submit:
+        console.log('user submitted!');
+        break;
+
+      case MessageType.Finished:
+        console.log('user finished!');
+        break;
+
+      case MessageType.Failed:
+        console.log('user failed!');
+        break;
+
+      case MessageType.Discussion:
+        console.log('user clicked discussions!');
+        break;
+
+      case MessageType.Solutions:
+        console.log('user clicked solutions!');
+        break;
     }
   }
 );
