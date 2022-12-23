@@ -131,8 +131,6 @@ const reciever = (msg: MessageEvent<any>) => {
   console.log('handle messages', msg);
 
   const { type, params, ts } = JSON.parse(msg.data) as Message;
-  const dateString = ts as unknown as string; // ts parameter breaks otherwise
-  const tsDate: Date = new Date(dateString);
 
   switch (type) {
     case MessageType.Create:
@@ -142,7 +140,6 @@ const reciever = (msg: MessageEvent<any>) => {
     case MessageType.Join:
       break;
     case MessageType.Message:
-      //recieveMessage(params?.message, params?.userInfo?.userId, tsDate);
       break;
     case MessageType.Leave:
       break;
@@ -151,16 +148,9 @@ const reciever = (msg: MessageEvent<any>) => {
       break;
 
     case MessageType.Submit:
-      // const submitMessage = 'attempt submitted';
-      // recieveMessage(submitMessage, params?.userInfo?.userId, tsDate);
       break;
 
     case MessageType.Finished:
-      // const finishedMessage = 'attempt accepted';
-      // var user = params?.userInfo?.userId;
-      // if (!user) user = 'unknown';
-
-      // recieveMessage('user', 'unknown', tsDate);
       break;
 
     case MessageType.Failed:
