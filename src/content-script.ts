@@ -1,5 +1,8 @@
 'use strict';
 
+import { Message, MessageType } from './types';
+import { delay } from './utils';
+
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
 // Document Object Model (DOM).
@@ -25,52 +28,74 @@ const submitButtonIsRunning = (): boolean => {
   );
 };
 
+const getHintButton = (): Element | undefined => {
+  return document.getElementsByClassName(
+    'px-2 py-1 hover:text-blue-s dark:hover:text-dark-blue-s cursor-pointer rounded transition-colors text-gray-6 dark:text-dark-gray-6 hover:bg-fill-3 dark:hover:bg-dark-fill-3'
+  )[0];
+};
+
 // accepted checkmark is seen && in submissions tab
 const answerIsAccepted = (): boolean =>
   document.getElementsByClassName(
     'text-xl font-medium text-red-s dark:text-dark-red-s'
   )[0] === undefined;
 
-const submitButton = getSubmitButton();
+const submitButton = getSubmitButton() as Node | undefined;
 const sectionTabs = document.getElementsByClassName(
   'flex h-11 w-full items-center pt-2'
 )[0];
-const hintButton = document.getElementsByClassName(
-  'px-2 py-1 hover:text-blue-s dark:hover:text-dark-blue-s cursor-pointer rounded transition-colors text-gray-6 dark:text-dark-gray-6 hover:bg-fill-3 dark:hover:bg-dark-fill-3'
-)[0];
+let hintButton = getHintButton() as Node | undefined;
 
 // resolves submit button change (checks when solution has finished submitting)
-const resolveSubmitButtonChange = (mutationRecords: MutationRecord[]): void => {
-  for (const mutation of mutationRecords) {
-    console.log(mutation.target);
+const resolveSubmitButtonChange = (): void => {
+  if (submitButtonIsRunning()) return;
 
-    // make sure its actually done submitting
-    if (submitButtonIsRunning()) continue;
-    // if (mutation.target === getSubmitButtonRunning()) continue;
-    // if (mutation.target !== getSubmitButtonIdle()) continue;
+  // sends a finished/failed messaged to background.js based on outcome
+  const message: Message = {
+    type: answerIsAccepted() ? MessageType.Finished : MessageType.Failed,
+    ts: new Date(),
+  };
+  chrome.runtime.sendMessage(message);
 
-    console.log('finished submitting');
-    console.log('accepted:', answerIsAccepted());
-
-    // stops observing until the next button click
-    submitButtonObserver.disconnect();
-    break;
-  }
+  // stops observing until the next button click
+  submitButtonObserver.disconnect();
 };
 
 // checks whether 'discussion' or 'solutions' tab has been clicked
-const resolveSectionTabsChange = (mutationRecords: MutationRecord[]): void => {
+const resolveSectionTabsChange = async (
+  mutationRecords: MutationRecord[]
+): Promise<void> => {
   for (const mutation of mutationRecords) {
-    if (mutation.target === null) continue;
-    if ((mutation.target as HTMLElement).className.includes('cursor-pointer'))
+    hintButton?.removeEventListener('click', handleHintButtonClick);
+
+    if (
+      mutation.target === null ||
+      (mutation.target as HTMLElement).className.includes('cursor-pointer')
+    )
       continue;
 
     if (mutation.target.textContent?.startsWith('Discussion')) {
-      console.log('opened discussions');
+      const message: Message = {
+        type: MessageType.Discussion,
+        ts: new Date(),
+      };
+      chrome.runtime.sendMessage(message);
     }
 
     if (mutation.target.textContent?.startsWith('Solutions')) {
-      console.log('opened solutions');
+      const message: Message = {
+        type: MessageType.Solutions,
+        ts: new Date(),
+      };
+      chrome.runtime.sendMessage(message);
+    }
+
+    // reset hint button event listener when entering description tab
+    if (mutation.target.textContent?.startsWith('Description')) {
+      await delay(500);
+      hintButton = getHintButton();
+      hintButton?.addEventListener('click', handleHintButtonClick);
+      break;
     }
   }
 };
@@ -80,7 +105,11 @@ const submitButtonObserver = new MutationObserver(resolveSubmitButtonChange);
 const sectionTabsObserver = new MutationObserver(resolveSectionTabsChange);
 
 const handleSubmitButtonClick = () => {
-  console.log('submitted');
+  const message: Message = {
+    type: MessageType.Submit,
+    ts: new Date(),
+  };
+  chrome.runtime.sendMessage(message);
 
   // begin observing
   submitButtonObserver.observe(submitButton as Node, {
@@ -96,14 +125,17 @@ const handleHintButtonClick = () => {
   )[0];
   if (hintPopup !== undefined) return;
 
-  console.log('hint');
+  // sends message to background.js
+  const message: Message = {
+    type: MessageType.Hint,
+    ts: new Date(),
+  };
+  chrome.runtime.sendMessage(message);
 };
 
 // Event listeners
-(submitButton as Node).addEventListener('click', handleSubmitButtonClick);
-
-if (hintButton)
-  (hintButton as Node).addEventListener('click', handleHintButtonClick);
+submitButton?.addEventListener('click', handleSubmitButtonClick);
+hintButton?.addEventListener('click', handleHintButtonClick);
 
 sectionTabsObserver.observe(sectionTabs as Element, {
   childList: true,

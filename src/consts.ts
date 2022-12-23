@@ -1,2 +1,2 @@
-export const HOST = 'localhost:1234';
+export const HOST = 'localhost';
 export const PORT = 1234;
