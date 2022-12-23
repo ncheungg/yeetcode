@@ -1,36 +1,92 @@
-export enum PopupState {
-  NotLeetcode = 'not-on-leetcode',
-  NotInRoom = 'not-in-room',
-  InRoom = 'in-room',
-}
+'use strict';
 
 export enum MessageType {
-  TabChange = 'tab_change',
+  Create,
+  Join,
+  Leave,
+  Message,
+  Hint,
+  Discussion,
+  Solutions,
+  Submit,
+  Finished,
+  Failed,
+  Action,
+  Ready,
+  Unready,
+  StartGame,
+  EndGame,
+  Forfeit,
+  FetchUserInfo,
 }
 
-export interface PopupMessage {
+export enum UserGameState {
+  Ready,
+  Unready,
+  Playing,
+  Spectating,
+  Finished,
+  Forfeited,
+}
+
+export interface MessageParams {
+  roomId?: string;
+  message?: string;
+  problem?: Problem;
+  userInfo?: UserInfo;
+}
+
+export interface Message {
   type: MessageType;
-  data: any;
+  params?: MessageParams;
+  ts: Date;
 }
 
-export enum SocketMessageType {
-  Create = 'create',
-  Join = 'join',
-  Leave = 'leave',
-  Message = 'message',
-  Action = 'action',
+export enum ProblemDifficulty {
+  Easy,
+  Medium,
+  Hard,
 }
 
-export interface SocketMessageParams {
-  roomID?: string;
-  message?: string | UserInfo;
+export interface Problem {
+  url: string;
+  id: number;
+  difficulty: ProblemDifficulty;
+  name: string;
+  premium: boolean;
+  topics: string[];
 }
 
-export interface SocketMessage {
-  type: SocketMessageType;
-  params: SocketMessageParams;
+export interface Round {
+  problem: Problem;
+  expiryDate: Date;
+  finishedOrder: WebSocket[];
+  forfeited: WebSocket[];
+  timeoutId: NodeJS.Timeout;
+}
+
+export interface Room {
+  id: string;
+  sockets: {
+    [userId: string]: WebSocket;
+  };
+  completedProblems: Set<Problem>;
+  socketGameState: {
+    [userId: string]: UserGameState;
+  };
+  isInGame: boolean;
+  round?: Round;
+}
+
+export interface Rooms {
+  [id: string]: Room;
+}
+
+export interface UserToRoom {
+  [id: string]: string | undefined;
 }
 
 export interface UserInfo {
-  userID: string;
+  userId?: string;
+  avatarUrl?: string | null;
 }

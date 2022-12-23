@@ -1,25 +1,33 @@
 'use strict';
 
-import { PopupState, MessageType, SocketMessageType } from './types';
+import { Message, MessageType, UserInfo } from './types';
 import { HOST, PORT } from './consts';
 
 // states
-let urlState: URL;
 let isInRoomState: boolean = false;
-let popupState: PopupState = PopupState.NotLeetcode;
-let userID: string = '';
-// todo: add state
 
-// With background scripts you can communicate with popup
-// and contentScript files.
-// For more information on background script,
-// See https://developer.chrome.com/extensions/background_pages
+let url: URL | undefined;
+let userInfo: UserInfo | undefined;
 
+// // connect to websocket
 // const ws = new WebSocket(`ws://${HOST}:${PORT}`);
 // console.log('opened websocket', ws);
 
-// programmatically switch popup file based on the active tab
-const getTab = async () => {
+// programmatically switch popup file based on states
+const switchPopup = (): void => {
+  if (!url) return;
+
+  if (url.hostname === 'leetcode.com' && isInRoomState) {
+    chrome.action.setPopup({ popup: 'in-room.html' });
+  } else if (url.hostname === 'leetcode.com' && userInfo?.userId) {
+    chrome.action.setPopup({ popup: 'not-in-room.html' });
+  } else if (url.hostname === 'leetcode.com') {
+    chrome.action.setPopup({ popup: 'not-logged-in.html' });
+  } else {
+    chrome.action.setPopup({ popup: 'not-leetcode.html' });
+  }
+};
+const getTab = async (): Promise<string | undefined> => {
   const tabs = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true,
@@ -27,69 +35,51 @@ const getTab = async () => {
   return tabs[0].url;
 };
 chrome.tabs.onActivated.addListener(async () => {
-  const url = await getTab();
-  console.log(url);
-  if (!url) return;
+  const tabUrl = await getTab();
+  if (!tabUrl) return;
 
-  urlState = new URL(url);
+  url = new URL(tabUrl);
 
-  if (urlState.hostname === 'leetcode.com' && isInRoomState) {
-    // popupState = PopupState.InRoom;
-    chrome.action.setPopup({ popup: 'in-room.html' });
-  } else if (urlState.hostname === 'leetcode.com') {
-    // popupState = PopupState.NotInRoom;
-    chrome.action.setPopup({ popup: 'not-in-room.html' });
-  } else {
-    // popupState = PopupState.NotLeetcode;
-    chrome.action.setPopup({ popup: 'not-leetcode.html' });
-  }
-
-  // const message: Message = {
-  //   type: MessageType.TabChange,
-  //   data: popupState,
-  // };
-
-  // chrome.runtime.sendMessage(message);
+  switchPopup();
 });
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  // console.log(
-  //   sender.tab
-  //     ? 'from a content script:' + sender.tab.url
-  //     : 'from the extension'
-  // );
+// handles messages sent by popup, content-scripts, and backend
+chrome.runtime.onMessage.addListener(
+  (request: Message, sender, sendResponse) => {
+    const { type, params } = request;
 
-  switch (request.type) {
-    case SocketMessageType.Create:
-      // TODO: send room creation request to backend and check if successful
-      const roomCreated = true; // replace
+    switch (type) {
+      case MessageType.Create:
+        // TODO: send room creation request to backend and check if successful
+        const roomCreated = true; // replace
 
-      if (!roomCreated) {
-        sendResponse({ status: 'room not created' });
-        return;
-      }
-
-      injectSidebar().then(function (result) {
-        if (result) {
-          sendResponse({ status: 'could not create chat' });
-        } else {
-          sendResponse({ status: 'room created' });
+        if (!roomCreated) {
+          sendResponse({ status: 'room not created' });
+          return;
         }
-      });
 
-      break;
-    case SocketMessageType.Join:
-      break;
-    case SocketMessageType.Leave:
-      break;
-    case SocketMessageType.Message:
-      break;
-    case SocketMessageType.Action:
-      break;
-    default:
-      break;
+        injectSidebar().then(function (result) {
+          if (result) {
+            sendResponse({ status: 'could not create chat' });
+          } else {
+            sendResponse({ status: 'room created' });
+          }
+        });
+
+        break;
+      case MessageType.Join:
+        break;
+      case MessageType.Leave:
+        break;
+
+      // updates userInfo state
+      case MessageType.FetchUserInfo:
+        userInfo = params?.userInfo as UserInfo;
+        switchPopup();
+        break;
+    }
   }
-});
+);
 
 // TODO:: call this function on message recieved from popup
 const injectSidebar = async () => {

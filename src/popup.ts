@@ -1,12 +1,13 @@
 'use strict';
 
 import './popup.css';
-import { SocketMessage, SocketMessageType } from './types';
+import { Message, MessageType } from './types';
 
 function injectSidebar() {
-  const message: SocketMessage = {
-    type: SocketMessageType.Create,
+  const message: Message = {
+    type: MessageType.Create,
     params: {},
+    ts: new Date(),
   };
 
   chrome.runtime.sendMessage(message, function (response) {
