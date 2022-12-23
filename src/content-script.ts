@@ -3,17 +3,6 @@
 import { Message, MessageType } from './types';
 import { delay } from './utils';
 
-// Content script file will run in the context of web page.
-// With content script you can manipulate the web pages using
-// Document Object Model (DOM).
-// You can also pass information to the parent extension.
-
-// We execute this script by making an entry in manifest.json file
-// under `content_scripts` property
-
-// For more information on Content Scripts,
-// See https://developer.chrome.com/extensions/content_scripts
-
 const getSubmitButton = (): Element | undefined => {
   for (const btn of document.getElementsByTagName('button')) {
     if (btn.innerText === 'Submit') return btn;
@@ -28,11 +17,10 @@ const submitButtonIsRunning = (): boolean => {
   );
 };
 
-const getHintButton = (): Element | undefined => {
-  return document.getElementsByClassName(
+const getHintButton = (): Element | undefined =>
+  document.getElementsByClassName(
     'px-2 py-1 hover:text-blue-s dark:hover:text-dark-blue-s cursor-pointer rounded transition-colors text-gray-6 dark:text-dark-gray-6 hover:bg-fill-3 dark:hover:bg-dark-fill-3'
   )[0];
-};
 
 // accepted checkmark is seen && in submissions tab
 const answerIsAccepted = (): boolean =>
@@ -40,11 +28,11 @@ const answerIsAccepted = (): boolean =>
     'text-xl font-medium text-red-s dark:text-dark-red-s'
   )[0] === undefined;
 
-const submitButton = getSubmitButton() as Node | undefined;
 const sectionTabs = document.getElementsByClassName(
   'flex h-11 w-full items-center pt-2'
 )[0];
-let hintButton = getHintButton() as Node | undefined;
+let submitButton: Node | undefined;
+let hintButton: Node | undefined;
 
 // resolves submit button change (checks when solution has finished submitting)
 const resolveSubmitButtonChange = (): void => {
@@ -133,9 +121,30 @@ const handleHintButtonClick = () => {
   chrome.runtime.sendMessage(message);
 };
 
-// Event listeners
-submitButton?.addEventListener('click', handleSubmitButtonClick);
-hintButton?.addEventListener('click', handleHintButtonClick);
+// keep trying to grab the buttons until DOM fully loads
+// try for 20 iterations with 500ms intervals
+
+// submit button event listener
+(async () => {
+  for (let i = 0; i < 20; i++) {
+    submitButton = getSubmitButton();
+    submitButton?.addEventListener('click', handleSubmitButtonClick);
+
+    if (submitButton) return;
+    await delay(500);
+  }
+})();
+
+// hint button event listener
+(async () => {
+  for (let i = 0; i < 20; i++) {
+    hintButton = getHintButton();
+    hintButton?.addEventListener('click', handleHintButtonClick);
+
+    if (hintButton) return;
+    await delay(500);
+  }
+})();
 
 sectionTabsObserver.observe(sectionTabs as Element, {
   childList: true,

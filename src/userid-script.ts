@@ -3,10 +3,7 @@
 import { Message, MessageType, UserInfo } from './types';
 import { delay } from './utils';
 
-// runs function with a 2 second delay
-(async () => {
-  await delay(2000);
-
+const getUserInfo = (): UserInfo => {
   // css for profile dropdown, makes it invisible when we're programmatically clicking it
   const stylesheet = document.createElement('style');
   stylesheet.innerHTML = '.ant-dropdown { display: none; }';
@@ -46,7 +43,25 @@ import { delay } from './utils';
 
   // sends a message to background js with avatar and userId
   const userInfo: UserInfo = { userId, avatarUrl };
-  console.log(userInfo);
+
+  return userInfo;
+};
+
+// runs function with a 1 second delay
+(async () => {
+  await delay(1000);
+
+  let userInfo: UserInfo | undefined;
+
+  // does 20 attempts in 500ms intervals to try to get the userinfo
+  for (let i = 0; i < 20; i++) {
+    userInfo = getUserInfo();
+    console.log(userInfo);
+
+    if (userInfo.userId) break;
+
+    await delay(500);
+  }
 
   const message: Message = {
     type: MessageType.FetchUserInfo,

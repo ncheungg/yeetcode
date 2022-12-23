@@ -138,7 +138,7 @@ const reciever = (msg: MessageEvent<any>) => {
     case MessageType.Join:
       break;
     case MessageType.Message:
-      recieveMessage(params?.userInfo?.userId, , ts);
+      // recieveMessage(params?.userInfo?.userId, , ts);
 
       break;
     case MessageType.Leave:

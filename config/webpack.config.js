@@ -14,6 +14,7 @@ const config = (env, argv) =>
       background: PATHS.src + '/background.ts',
       sidebar: PATHS.src + '/sidebar.ts',
       'userid-script': PATHS.src + '/userid-script.ts',
+      'not-logged-in': PATHS.src + '/not-logged-in.ts',
     },
     devtool: argv.mode === 'production' ? false : 'source-map',
   });
