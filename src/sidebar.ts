@@ -1,4 +1,5 @@
 import './sidebar.css';
+import { Message, MessageType } from './types';
 
 // TODO: replace temp variables
 const user1 = 'USER1';
@@ -10,60 +11,30 @@ var iframe = createIFrame();
 var main = document.createElement('main');
 addSidebar();
 
-function addSidebar() {
-  document.body.style.setProperty('width', '80%');
-  document.body.appendChild(iframe);
-  addStyleSheet(iframe);
-
-  var section = document.createElement('section');
-  section.classList.add('msger');
-
-  var header = createHeader();
-  section.appendChild(header);
-
-  var main = createMain();
-  section.appendChild(main);
-
-  var form = createForm();
-  section.appendChild(form);
-
-  iframe.contentWindow?.document.body.appendChild(section);
-}
-
-function sendMessage(text: string) {
-  const message = createMessage(user2, new Date(), text);
+export function sendMessage(text: string, username: string = user2) {
+  const message = createMessage(username, new Date(), text ? text : '');
   main.appendChild(message);
   main.scrollTop += 500;
 }
 
-function recieveMessage(username: string, timestamp: Date, text: string) {
-  const message = createMessage(username, timestamp, text);
+export function recieveMessage(
+  text: string,
+  username: string,
+  timestamp: Date,
+  italics: boolean = false
+) {
+  if (!timestamp) return;
+  const message = createMessage(username, timestamp, text, true, italics);
   main.appendChild(message);
   main.scrollTop += 500;
 }
 
-function createReadyButton() {
-  var form = document.createElement('form');
-
-  var button = document.createElement('button');
-  button.setAttribute('type', 'submit');
-  button.classList.add('msger-send-btn');
-  button.appendChild(document.createTextNode('Ready'));
-
-  form.appendChild(button);
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    // TODO: ready state
-  });
-  return form;
-}
 function createMessage(
   username: string,
   timestamp: Date,
   message: string,
-  isIncoming: boolean = false
+  isIncoming: boolean = false,
+  italics: boolean = false
 ) {
   var textDiv = document.createElement('div');
   textDiv.classList.add('msg');
@@ -88,30 +59,81 @@ function createMessage(
 
   var time = document.createElement('div');
   time.classList.add('msg-info-time');
-  time.appendChild(document.createTextNode(timestamp.toTimeString()));
+  time.appendChild(document.createTextNode(timestamp.toLocaleTimeString()));
 
   info.appendChild(name);
   info.appendChild(time);
 
   var text = document.createElement('div');
   text.classList.add('msg-text');
-  text.appendChild(document.createTextNode(message));
 
+  var messageText = document.createTextNode(message);
+  if (italics) {
+    var it = document.createElement('i');
+    it.appendChild(messageText);
+    text.appendChild(it);
+  } else {
+    text.appendChild(messageText);
+  }
   bubble.appendChild(info);
   bubble.appendChild(text);
+
   textDiv.appendChild(bubble);
 
   return textDiv;
 }
 
+function addSidebar() {
+  document.body.style.setProperty('width', '80%');
+  document.body.appendChild(iframe);
+  addStyleSheet(iframe);
+
+  var section = document.createElement('section');
+  section.classList.add('msger');
+
+  var header = createHeader();
+  section.appendChild(header);
+
+  var main = createMain();
+  section.appendChild(main);
+
+  var form = createForm();
+  section.appendChild(form);
+
+  iframe.contentWindow?.document.body.appendChild(section);
+}
+
+function createReadyButton() {
+  var form = document.createElement('form');
+
+  var button = document.createElement('button');
+  button.setAttribute('type', 'submit');
+  button.classList.add('msger-send-btn');
+  button.appendChild(document.createTextNode('Ready'));
+
+  form.appendChild(button);
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const message: Message = {
+      type: MessageType.Ready,
+      params: {},
+      ts: new Date(),
+    };
+
+    chrome.runtime.sendMessage(message, function (response) {
+      console.log(response);
+    });
+  });
+  return form;
+}
+
 function createMain() {
   main.classList.add('msger-chat');
 
-  var incomingMessage = createMessage(user1, new Date(), message1, true);
-  var outgoingMessage = createMessage(user2, new Date(), message2);
-
-  main.appendChild(incomingMessage);
-  main.appendChild(outgoingMessage);
+  recieveMessage(message1, user1, new Date());
+  sendMessage(message2, user2);
 
   return main;
 }
@@ -139,7 +161,18 @@ function createForm() {
     const text = input.value;
     if (!text) return;
 
+    const message: Message = {
+      type: MessageType.Message,
+      params: { message: text },
+      ts: new Date(),
+    };
+
+    chrome.runtime.sendMessage(message, function (response) {
+      console.log(response);
+    });
+
     sendMessage(text);
+
     input.value = '';
   });
 
