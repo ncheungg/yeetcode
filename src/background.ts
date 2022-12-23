@@ -114,10 +114,16 @@ const injectSidebar = async () => {
     console.log(tab);
     if (!tab) return false;
 
+    // chrome.scripting.insertCSS({
+    //   target: { tabId: tab.id as number },
+    //   files: ['sidebar.css'],
+    // });
+
     chrome.scripting.executeScript({
       target: { tabId: tab.id as number },
       files: ['sidebar.js'],
     });
+
     return true;
   } catch {
     return false;
