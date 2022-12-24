@@ -6,7 +6,8 @@ import { delay } from './utils';
 const getUserInfo = (): UserInfo => {
   // css for profile dropdown, makes it invisible when we're programmatically clicking it
   const stylesheet = document.createElement('style');
-  stylesheet.innerHTML = '.ant-dropdown { display: none; }';
+  stylesheet.innerHTML =
+    '.z-nav { display: none !important; } .ant-dropdown { display: none !important; } ';
   const head = document.getElementsByTagName('head')[0];
   head.appendChild(stylesheet);
 
@@ -17,18 +18,14 @@ const getUserInfo = (): UserInfo => {
   profileDropdown?.click();
   profileDropdown?.click();
 
-  // remove invisible css rule
-  stylesheet.remove();
-
   // on load grab the leetcode username
   const avatarElement = document.getElementsByClassName(
     'h-6 w-6 rounded-full object-cover'
   )[0];
-
   const avatarUrl: string | null = avatarElement?.getAttribute('src');
-
   const avatarButton =
     avatarElement.parentElement?.parentElement?.parentElement;
+
   avatarButton?.click();
 
   const userNameElement = document.getElementsByClassName(
@@ -40,6 +37,11 @@ const getUserInfo = (): UserInfo => {
     userNameElement?.getAttribute('href')?.split('/')[1];
 
   avatarButton?.click();
+
+  // remove invisible css rule after a 50ms delay
+  setTimeout(() => {
+    stylesheet.remove();
+  }, 50);
 
   // sends a message to background js with avatar and userId
   const userInfo: UserInfo = { userId, avatarUrl };
