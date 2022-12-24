@@ -1,5 +1,11 @@
 import './sidebar.css';
-import { Message, MessageParams, MessageType, UserInfo } from './types';
+import {
+  Message,
+  MessageParams,
+  MessageType,
+  Problem,
+  UserInfo,
+} from './types';
 
 // TODO: replace temp variables
 const user1 = 'USER1';
@@ -34,12 +40,19 @@ chrome.runtime.onMessage.addListener(
 
     switch (type) {
       case MessageType.Message:
-        console.log('chatRecievedMessage', request);
         recieveChatMessage(message as string, userName, ts);
         break;
+
       case MessageType.Action:
-        console.log('chatRecievedAction', request);
-        recieveChatMessage(message as string, userName, ts, true);
+        recieveChatMessage(message as string, '', ts, true);
+        break;
+      case MessageType.StartGame:
+        // set timer
+
+        break;
+      case MessageType.EndGame:
+        // clear timer
+
         break;
       default:
         break;
@@ -152,22 +165,13 @@ function addSidebar() {
   var header = createHeader();
   section.appendChild(header);
 
-  var main = createMain();
+  main.classList.add('msger-chat');
   section.appendChild(main);
 
   var form = createForm();
   section.appendChild(form);
 
   iframe.contentWindow?.document.body.appendChild(section);
-}
-
-function createMain() {
-  main.classList.add('msger-chat');
-
-  // recieveChatMessage(message1, user1, new Date());
-  // sendChatMessage(message2, user2);
-
-  return main;
 }
 
 function createForm() {

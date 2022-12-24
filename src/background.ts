@@ -1,6 +1,12 @@
 'use strict';
 
-import { Message, MessageParams, MessageType, UserInfo } from './types';
+import {
+  Message,
+  MessageParams,
+  MessageType,
+  UserInfo,
+  Problem,
+} from './types';
 
 import { HOST, PORT } from './consts';
 
@@ -122,7 +128,7 @@ const injectSidebar = async () => {
   });
 };
 
-const sendMessageToChat = async (message: Message) => {
+const sendMessageToSidebar = async (message: Message) => {
   let tabId = await getTabId();
   // const message: Message = {
   //   type: MessageType.ChatMessage,
@@ -143,36 +149,17 @@ const reciever = (msg: MessageEvent<any>) => {
     case MessageType.Create:
       const { roomId } = params as MessageParams;
       roomIdState = roomId;
-      sendMessageToChat(message);
       break;
-    case MessageType.Join:
-      break;
-    case MessageType.Message:
-      sendMessageToChat(message);
-      break;
-    case MessageType.Action:
-      sendMessageToChat(message);
-      break;
-    case MessageType.Leave:
-      break;
+    case MessageType.StartGame:
+      console.log('problem:', params?.problem);
 
-    case MessageType.Hint:
-      break;
+      const { problem } = params as MessageParams;
+      const { url, id, difficulty, name, premium, topics } = problem as Problem;
+      const urlString = url as string;
 
-    case MessageType.Submit:
-      break;
-
-    case MessageType.Finished:
-      break;
-
-    case MessageType.Failed:
-      break;
-
-    case MessageType.Discussion:
-      break;
-
-    case MessageType.Solutions:
-      break;
+      chrome.tabs.update({ url: urlString });
+    default:
+      sendMessageToSidebar(message);
   }
 };
 
