@@ -152,7 +152,6 @@ const reciever = (msg: MessageEvent<any>) => {
       break;
     case MessageType.StartGame:
       console.log('problem:', params?.problem);
-
       const { problem } = params as MessageParams;
       const { url, id, difficulty, name, premium, topics } = problem as Problem;
       const urlString = url as string;
