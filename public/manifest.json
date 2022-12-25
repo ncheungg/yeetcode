@@ -32,12 +32,8 @@
     },
     {
       "matches": ["*://*.leetcode.com/*"],
-      "js": ["userid-script.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["*://*.leetcode.com/*"],
-      "js": ["sidebar-script.js"],
+      "js": ["userid-script.js", "sidebar-script.js"],
+      "css": ["sidebar.css"],
       "run_at": "document_idle"
     }
   ]

@@ -1,6 +1,6 @@
 'use strict';
 
-import { Message, MessageType, UserInfo } from '../types';
+import { Message, MessageTypeInternal, UserInfo } from '../types';
 import { delay } from '../utils';
 
 const getUserInfo = (): UserInfo => {
@@ -66,7 +66,7 @@ const getUserInfo = (): UserInfo => {
   }
 
   const message: Message = {
-    type: MessageType.FetchUserInfo,
+    type: MessageTypeInternal.FetchUserInfo,
     params: {
       userInfo,
     },

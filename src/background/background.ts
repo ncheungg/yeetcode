@@ -6,6 +6,7 @@ import {
   MessageType,
   UserInfo,
   Problem,
+  MessageTypeInternal,
 } from '../types';
 
 import { HOST, PORT } from '../consts';
@@ -18,6 +19,18 @@ let userInfo: UserInfo | undefined;
 
 // connect to websocket
 var ws: WebSocket | null = null;
+
+// sends message to activate tab's content script
+const sendMessageToContentScript = (message: Message): void => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs[0].id) {
+      console.error(`Error: could not send message to tab ${tabs[0]}`);
+      return;
+    }
+
+    chrome.tabs.sendMessage(tabs[0].id, message);
+  });
+};
 
 // programmatically switch popup file based on states
 const switchPopup = (): void => {
@@ -53,11 +66,16 @@ chrome.tabs.onActivated.addListener(async () => {
 chrome.runtime.onMessage.addListener(
   (request: Message, sender, sendResponse) => {
     const { type, params } = request;
+
+    console.log(request);
+
     switch (type) {
       case MessageType.Create:
         if (request.params) request.params.userInfo = userInfo;
 
-        injectSidebar();
+        // injectSidebar();
+        isInRoomState = true;
+        injectSidebar2();
         openSocket(request);
 
         break;
@@ -69,12 +87,6 @@ chrome.runtime.onMessage.addListener(
         if (request.params) request.params.userInfo = userInfo;
         ws?.send(JSON.stringify(request));
 
-        break;
-
-      // updates userInfo state
-      case MessageType.FetchUserInfo:
-        userInfo = params?.userInfo as UserInfo;
-        switchPopup();
         break;
 
       case MessageType.Hint:
@@ -103,6 +115,26 @@ chrome.runtime.onMessage.addListener(
       case MessageType.Ready:
         ws?.send(JSON.stringify(request));
         break;
+
+      // internal states
+      case MessageTypeInternal.FetchUserInfo:
+        userInfo = params?.userInfo as UserInfo;
+        switchPopup();
+        break;
+
+      case MessageTypeInternal.FetchIsInRoomState:
+        const roomStateMessage: Message = {
+          type: MessageTypeInternal.FetchIsInRoomState,
+          params: {
+            isInRoom: isInRoomState,
+          },
+          ts: new Date(),
+        };
+        sendMessageToContentScript(roomStateMessage);
+        break;
+
+      default:
+        console.error(`Error: could not process action of type ${type}`);
     }
   }
 );
@@ -111,6 +143,19 @@ const getTabId = async () => {
   let queryOptions = { active: true, lastFocusedWindow: true };
   const [tab] = await chrome.tabs.query(queryOptions);
   return tab.id as number;
+};
+
+const injectSidebar2 = () => {
+  const roomStateMessage: Message = {
+    type: MessageTypeInternal.FetchIsInRoomState,
+    params: {
+      isInRoom: isInRoomState,
+    },
+    ts: new Date(),
+  };
+  sendMessageToContentScript(roomStateMessage);
+
+  // should do more here idfk
 };
 
 // TODO:: call this function on message recieved from popup
@@ -138,7 +183,8 @@ const sendMessageToSidebar = async (message: Message) => {
   await chrome.tabs.sendMessage(tabId, message);
 };
 
-const reciever = (msg: MessageEvent<any>) => {
+// handles incoming messages received by the ws
+const wsMessageHandler = (msg: MessageEvent<any>) => {
   // TODO
   console.log('handle messages', msg);
 
@@ -150,6 +196,7 @@ const reciever = (msg: MessageEvent<any>) => {
       const { roomId } = params as MessageParams;
       roomIdState = roomId;
       break;
+
     case MessageType.StartGame:
       console.log('problem:', params?.problem);
       const { problem } = params as MessageParams;
@@ -157,12 +204,13 @@ const reciever = (msg: MessageEvent<any>) => {
       const urlString = url as string;
 
       chrome.tabs.update({ url: urlString });
+      break;
     default:
-      sendMessageToSidebar(message);
+      console.error(`Error: could not process action of type ${type}`);
   }
 };
 
-const openSocket = (initialCreateRequest: Message) => {
+const openSocket = (initialCreateRequest: Message): void => {
   ws = new WebSocket(`ws://${HOST}:${PORT}`);
   console.log('Attempting Connection...', ws);
 
@@ -172,7 +220,7 @@ const openSocket = (initialCreateRequest: Message) => {
   };
 
   ws.onmessage = (msg) => {
-    reciever(msg);
+    wsMessageHandler(msg);
   };
 
   ws.onclose = (event) => {
@@ -186,5 +234,6 @@ const openSocket = (initialCreateRequest: Message) => {
 
 const closeSocket = () => {
   console.log('socket closed');
+
   ws?.close();
 };
