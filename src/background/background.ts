@@ -6,9 +6,9 @@ import {
   MessageType,
   UserInfo,
   Problem,
-} from './types';
+} from '../types';
 
-import { HOST, PORT } from './consts';
+import { HOST, PORT } from '../consts';
 
 // states
 let isInRoomState: boolean = false;
