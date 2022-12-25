@@ -1,5 +1,11 @@
 import './sidebar.css';
-import { Message, MessageType } from './types';
+import {
+  Message,
+  MessageParams,
+  MessageType,
+  Problem,
+  UserInfo,
+} from './types';
 
 // TODO: replace temp variables
 const user1 = 'USER1';
@@ -15,22 +21,84 @@ document.body.appendChild(iframe);
 const main = document.createElement('main');
 addSidebar();
 
-function addSidebar() {
-  addStyleSheet(iframe);
+chrome.runtime.onMessage.addListener(
+  (request: Message, sender, sendResponse) => {
+    console.log(
+      sender.tab
+        ? 'from a content script:' + sender.tab.url
+        : 'from the extension'
+    );
 
-  var section = document.createElement('section');
-  section.classList.add('msger');
+    const { type, params, ts } = request;
+    const { message, userInfo } = params as MessageParams;
+    var userName = '';
+    if (userInfo?.userId) {
+      userName = userInfo?.userId;
+    }
 
-  var header = createHeader();
-  section.appendChild(header);
+    console.log('recieved', request);
 
-  var main = createMain();
-  section.appendChild(main);
+    switch (type) {
+      case MessageType.Message:
+        recieveChatMessage(message as string, userName, ts);
+        break;
 
-  var form = createForm();
-  section.appendChild(form);
+      case MessageType.Action:
+        recieveChatMessage(message as string, '', ts, true);
+        break;
+      case MessageType.StartGame:
+        // set timer
 
-  iframe.contentWindow?.document.body.appendChild(section);
+        break;
+      case MessageType.EndGame:
+        // clear timer
+
+        break;
+      default:
+        break;
+    }
+  }
+);
+
+export function sendChatMessage(text: string, username: string = user2) {
+  const messageHTML = createMessage(username, new Date(), text);
+  main.appendChild(messageHTML);
+  main.scrollTop += 500;
+}
+
+export function recieveChatMessage(
+  text: string,
+  username: string,
+  timestamp: Date,
+  italics: boolean = false
+) {
+  const messageHTML = createMessage(username, timestamp, text, true, italics);
+  main.appendChild(messageHTML);
+  main.scrollTop += 500;
+}
+
+function createReadyButton() {
+  var form = document.createElement('form');
+
+  var button = document.createElement('button');
+  button.setAttribute('type', 'submit');
+  button.classList.add('msger-send-btn');
+  button.appendChild(document.createTextNode('Ready'));
+
+  form.appendChild(button);
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const message: Message = {
+      type: MessageType.Ready,
+      params: {},
+      ts: new Date(),
+    };
+
+    chrome.runtime.sendMessage(message);
+  });
+  return form;
 }
 
 function createMessage(
@@ -63,7 +131,8 @@ function createMessage(
 
   var time = document.createElement('div');
   time.classList.add('msg-info-time');
-  time.appendChild(document.createTextNode(timestamp.toLocaleTimeString()));
+  var ts = new Date(timestamp as unknown as string);
+  time.appendChild(document.createTextNode(ts.toLocaleTimeString()));
 
   info.appendChild(name);
   info.appendChild(time);
@@ -87,54 +156,22 @@ function createMessage(
   return textDiv;
 }
 
-export function sendMessage(text: string, username: string = user2) {
-  const message = createMessage(username, new Date(), text);
-  main.appendChild(message);
-  main.scrollTop += 500;
-}
+function addSidebar() {
+  addStyleSheet(iframe);
 
-export function recieveMessage(
-  text: string,
-  username: string,
-  timestamp: Date,
-  italics: boolean = false
-) {
-  const message = createMessage(username, timestamp, text, true, italics);
-  main.appendChild(message);
-  main.scrollTop += 500;
-}
+  var section = document.createElement('section');
+  section.classList.add('msger');
 
-function createReadyButton() {
-  var form = document.createElement('form');
+  var header = createHeader();
+  section.appendChild(header);
 
-  var button = document.createElement('button');
-  button.setAttribute('type', 'submit');
-  button.classList.add('msger-send-btn');
-  button.appendChild(document.createTextNode('Ready'));
-
-  form.appendChild(button);
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    const message: Message = {
-      type: MessageType.Ready,
-      params: {},
-      ts: new Date(),
-    };
-
-    chrome.runtime.sendMessage(message);
-  });
-  return form;
-}
-
-function createMain() {
   main.classList.add('msger-chat');
+  section.appendChild(main);
 
-  recieveMessage(message1, user1, new Date());
-  sendMessage(message2, user2);
+  var form = createForm();
+  section.appendChild(form);
 
-  return main;
+  iframe.contentWindow?.document.body.appendChild(section);
 }
 
 function createForm() {
@@ -168,7 +205,7 @@ function createForm() {
 
     chrome.runtime.sendMessage(message);
 
-    sendMessage(text);
+    sendChatMessage(text);
 
     input.value = '';
   });
