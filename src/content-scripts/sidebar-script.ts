@@ -24,10 +24,11 @@ const createSidebar = (): boolean => {
     <header class="msger-header">
       <div class="msger-header-title">Yeetcode</div>
       <div class="msger-header-options">
-        <form id="yeetcode-ready"><button type="submit" class="msger-send-btn">Ready</button></form>
+        <form id="yeetcode-ready"><button type="submit" id="yeetcode-ready-button" class="msger-send-btn">Ready</button></form>
       </div>
     </header>
     <main class="msger-chat" id="yeetcode-chat">
+    <p id="yeetcode-timer">00m 00s</p>
       
     </main>
     <form class="msger-inputarea" id="yeetcode-msger-form">
@@ -85,6 +86,8 @@ const createSidebar = (): boolean => {
     };
 
     chrome.runtime.sendMessage(message);
+
+    toggleButton();
   });
 
   return true;
@@ -163,6 +166,48 @@ const restoreChatHistory = (chatHistory: ChatMessage[] | undefined) => {
   }
 };
 
+const toggleButton = () => {
+  const readyButton = document.querySelector(
+    '#yeetcode-ready-button'
+  ) as HTMLButtonElement;
+
+  if (readyButton.textContent == 'Unready') {
+    readyButton.textContent = 'Ready';
+    readyButton.setAttribute('style', 'background:rgb(256, 0, 0) !important');
+  } else {
+    // 'Ready';
+    readyButton.textContent = 'Unready';
+    readyButton.setAttribute('style', 'background:rgb(0, 196, 65) !important');
+  }
+};
+const setTimer = (endDate: Date) => {
+  var countDownDate = endDate.getTime();
+
+  var x = setInterval(function () {
+    // Get today's date and time
+    var now = new Date().getTime();
+
+    // Find the distance between now and the count down date
+    var distance = countDownDate - now;
+
+    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    // Output the result in an element with id="demo"
+    const timer = document.getElementById('yeetcode-timer');
+
+    if (!timer) return;
+
+    timer.innerHTML = minutes + 'm ' + seconds + 's ';
+
+    // If the count down is over, write some text
+    if (distance < 0) {
+      clearInterval(x);
+      timer.innerHTML = '00m 00s';
+    }
+  }, 1000);
+};
+
 chrome.runtime.onMessage.addListener(
   (request: Message, sender, sendResponse) => {
     const { type, params, ts } = request;
@@ -175,6 +220,9 @@ chrome.runtime.onMessage.addListener(
           // add history
           const chatHistory = params.chatHistory;
           restoreChatHistory(chatHistory);
+
+          // setTimer()
+          // TODO: how to check if game ready?
         } else {
           removeSidebar();
         }
