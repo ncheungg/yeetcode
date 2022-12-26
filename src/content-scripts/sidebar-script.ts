@@ -7,16 +7,11 @@ const createSidebar = (): boolean => {
   console.log('created sidebar');
 
   // place to insert
-  document.body.style.setProperty('width', 'calc(100% - 350px)');
+  document.body.style.setProperty('width', '80%');
 
-  const iframe = document.createElement('iframe');
-  iframe.style.setProperty('id', 'sidebar');
-  iframe.style.setProperty('width', '350px');
-  iframe.style.setProperty('height', '100%');
-  iframe.style.setProperty('top', '0px');
-  iframe.style.setProperty('right', '0px');
-  iframe.style.setProperty('z-index', '9000000000000000000');
-  iframe.style.setProperty('position', 'fixed');
+  const sidebar = document.createElement('div');
+  sidebar.style.setProperty('id', 'sidebar');
+  sidebar.classList.add('sidebar');
 
   // the fukin sidebar html
   const sidebarHtml: string = `<section class="msger">
@@ -39,21 +34,14 @@ const createSidebar = (): boolean => {
     </form>
   </section>`;
 
-  document.body.appendChild(iframe);
+  document.body.appendChild(sidebar);
 
-  if (iframe.contentWindow) {
-    iframe.contentWindow.document.body.innerHTML = sidebarHtml;
-  } else {
-    console.error('Error: could not get iframe:', iframe);
-    return false;
-  }
+  sidebar.innerHTML = sidebarHtml;
 
-  var iframeDoc = iframe?.contentWindow?.document;
-
-  const form = iframeDoc.getElementById(
+  const form = document.getElementById(
     'yeetcode-msger-form'
   ) as HTMLFormElement;
-  const input = iframeDoc.getElementById(
+  const input = document.getElementById(
     'yeetcode-msger-input'
   ) as HTMLInputElement;
 
@@ -75,7 +63,7 @@ const createSidebar = (): boolean => {
 
     const messageHTML = createMessage(YOU, new Date(), text);
 
-    const chat = iframeDoc.getElementById('yeetcode-chat') as HTMLFormElement;
+    const chat = document.getElementById('yeetcode-chat') as HTMLFormElement;
     chat.insertAdjacentHTML('beforeend', messageHTML);
     chat.scrollTop += 500;
 
