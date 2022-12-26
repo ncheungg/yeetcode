@@ -67,7 +67,7 @@ chrome.runtime.onMessage.addListener(
     switch (type) {
       case MessageType.Create:
         isInRoomState = true;
-        injectSidebar2();
+        injectSidebar();
         openSocket(request);
 
         break;
@@ -131,7 +131,7 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
-const injectSidebar2 = () => {
+const injectSidebar = () => {
   const roomStateMessage: Message = {
     type: MessageTypeInternal.FetchIsInRoomState,
     params: {
@@ -173,6 +173,10 @@ const wsMessageHandler = (msg: MessageEvent<any>) => {
       const urlString = url as string;
 
       chrome.tabs.update({ url: urlString });
+      sendMessageToContentScript(message);
+      break;
+    case MessageType.EndGame:
+      sendMessageToContentScript(message);
       break;
     case MessageType.Action:
       chatHistory.push({ message, isOutgoing: false });
