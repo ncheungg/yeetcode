@@ -162,11 +162,6 @@ const injectSidebar2 = () => {
 const injectSidebar = async () => {
   let tabId = await getTabId();
 
-  // chrome.scripting.insertCSS({
-  //   target: { tabId: tab.id as number },
-  //   files: ['sidebar.css'],
-  // });
-
   chrome.scripting.executeScript({
     target: { tabId },
     files: ['sidebar.js'],
