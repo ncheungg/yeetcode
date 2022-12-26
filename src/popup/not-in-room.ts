@@ -1,9 +1,9 @@
 'use strict';
 
 import './popup.css';
-import { Message, MessageType } from './types';
+import { Message, MessageType } from '../types';
 
-function injectSidebar() {
+function createRoom() {
   const message: Message = {
     type: MessageType.Create,
     params: {},
@@ -15,6 +15,23 @@ function injectSidebar() {
   });
 }
 
+function joinRoom() {
+  const input = document.getElementById('join-room-input') as HTMLInputElement;
+  const id = input?.value;
+
+  const message: Message = {
+    type: MessageType.Join,
+    params: { roomId: id },
+    ts: new Date(),
+  };
+
+  chrome.runtime.sendMessage(message, function (response) {
+    console.log(response);
+  });
+
+  input.value = '';
+}
+
 (function () {
   // We will make use of Storage API to get and store `count` value
   // More information on Storage API can we found at
@@ -23,9 +40,9 @@ function injectSidebar() {
   // More information on Permissions can we found at
   // https://developer.chrome.com/extensions/declare_permissions
 
-  document
-    .getElementById('create-room')
-    ?.addEventListener('click', injectSidebar);
+  document.getElementById('create-room')?.addEventListener('click', createRoom);
+
+  document.getElementById('join-room')?.addEventListener('submit', joinRoom);
 
   // display UI elements based on the current URL
   // const counterStorage = {

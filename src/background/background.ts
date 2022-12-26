@@ -6,15 +6,18 @@ import {
   MessageType,
   UserInfo,
   Problem,
-} from './types';
+  MessageTypeInternal,
+  ChatMessage,
+} from '../types';
 
-import { HOST, PORT } from './consts';
+import { HOST, PORT } from '../consts';
 
 // states
 let isInRoomState: boolean = false;
 let roomIdState: string | undefined;
 let url: URL | undefined;
 let userInfo: UserInfo | undefined;
+let chatHistory: ChatMessage[] = [];
 
 // connect to websocket
 var ws: WebSocket | null = null;
@@ -33,15 +36,18 @@ const switchPopup = (): void => {
     chrome.action.setPopup({ popup: 'not-leetcode.html' });
   }
 };
-const getTab = async (): Promise<string | undefined> => {
+const getTab = async () => {
   const tabs = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true,
   });
-  return tabs[0].url;
+  return tabs[0];
 };
+
 chrome.tabs.onActivated.addListener(async () => {
-  const tabUrl = await getTab();
+  const tab = await getTab();
+  const tabUrl = tab.url;
+
   if (!tabUrl) return;
 
   url = new URL(tabUrl);
@@ -53,28 +59,28 @@ chrome.tabs.onActivated.addListener(async () => {
 chrome.runtime.onMessage.addListener(
   (request: Message, sender, sendResponse) => {
     const { type, params } = request;
+
+    console.log(request);
+    if (type != MessageTypeInternal.FetchUserInfo && request.params)
+      request.params.userInfo = userInfo;
+
     switch (type) {
       case MessageType.Create:
-        if (request.params) request.params.userInfo = userInfo;
-
+        isInRoomState = true;
         injectSidebar();
         openSocket(request);
 
         break;
       case MessageType.Join:
+        isInRoomState = true;
+        injectSidebar();
+        openSocket(request);
         break;
       case MessageType.Leave:
         break;
       case MessageType.Message:
-        if (request.params) request.params.userInfo = userInfo;
+        chatHistory.push({ message: request, isOutgoing: true });
         ws?.send(JSON.stringify(request));
-
-        break;
-
-      // updates userInfo state
-      case MessageType.FetchUserInfo:
-        userInfo = params?.userInfo as UserInfo;
-        switchPopup();
         break;
 
       case MessageType.Hint:
@@ -103,42 +109,54 @@ chrome.runtime.onMessage.addListener(
       case MessageType.Ready:
         ws?.send(JSON.stringify(request));
         break;
+
+      // internal states
+      case MessageTypeInternal.FetchUserInfo:
+        userInfo = params?.userInfo as UserInfo;
+        switchPopup();
+        break;
+
+      case MessageTypeInternal.FetchIsInRoomState:
+        const roomStateMessage: Message = {
+          type: MessageTypeInternal.FetchIsInRoomState,
+          params: {
+            isInRoom: isInRoomState,
+            chatHistory,
+          },
+          ts: new Date(),
+        };
+        sendMessageToContentScript(roomStateMessage);
+        break;
+
+      default:
+        console.error(`Error: could not process action of type ${type}`);
     }
   }
 );
 
-const getTabId = async () => {
-  let queryOptions = { active: true, lastFocusedWindow: true };
-  const [tab] = await chrome.tabs.query(queryOptions);
-  return tab.id as number;
+const injectSidebar = () => {
+  const roomStateMessage: Message = {
+    type: MessageTypeInternal.FetchIsInRoomState,
+    params: {
+      isInRoom: isInRoomState,
+      chatHistory,
+    },
+    ts: new Date(),
+  };
+  sendMessageToContentScript(roomStateMessage);
+
+  // should do more here idfk
 };
 
-// TODO:: call this function on message recieved from popup
-const injectSidebar = async () => {
-  let tabId = await getTabId();
+const sendMessageToContentScript = async (message: Message) => {
+  const tab = await getTab();
+  const tabId = tab.id as number;
 
-  // chrome.scripting.insertCSS({
-  //   target: { tabId: tab.id as number },
-  //   files: ['sidebar.css'],
-  // });
-
-  chrome.scripting.executeScript({
-    target: { tabId },
-    files: ['sidebar.js'],
-  });
-};
-
-const sendMessageToSidebar = async (message: Message) => {
-  let tabId = await getTabId();
-  // const message: Message = {
-  //   type: MessageType.ChatMessage,
-  //   params: { message: text, userInfo: { userId } },
-  //   ts,
-  // };
   await chrome.tabs.sendMessage(tabId, message);
 };
 
-const reciever = (msg: MessageEvent<any>) => {
+// handles incoming messages received by the ws
+const wsMessageHandler = (msg: MessageEvent<any>) => {
   // TODO
   console.log('handle messages', msg);
 
@@ -150,6 +168,7 @@ const reciever = (msg: MessageEvent<any>) => {
       const { roomId } = params as MessageParams;
       roomIdState = roomId;
       break;
+
     case MessageType.StartGame:
       console.log('problem:', params?.problem);
       const { problem } = params as MessageParams;
@@ -157,22 +176,35 @@ const reciever = (msg: MessageEvent<any>) => {
       const urlString = url as string;
 
       chrome.tabs.update({ url: urlString });
+      sendMessageToContentScript(message);
+      break;
+    case MessageType.EndGame:
+      sendMessageToContentScript(message);
+      break;
+    case MessageType.Action:
+      chatHistory.push({ message, isOutgoing: false });
+      sendMessageToContentScript(message);
+      break;
+    case MessageType.Message:
+      chatHistory.push({ message, isOutgoing: false });
+      sendMessageToContentScript(message);
+      break;
     default:
-      sendMessageToSidebar(message);
+      console.error(`Error: could not process action of type ${type}`);
   }
 };
 
-const openSocket = (initialCreateRequest: Message) => {
+const openSocket = (initialRequest: Message): void => {
   ws = new WebSocket(`ws://${HOST}:${PORT}`);
   console.log('Attempting Connection...', ws);
 
   ws.onopen = () => {
     console.log('Successfully Connected');
-    ws?.send(JSON.stringify(initialCreateRequest));
+    ws?.send(JSON.stringify(initialRequest));
   };
 
   ws.onmessage = (msg) => {
-    reciever(msg);
+    wsMessageHandler(msg);
   };
 
   ws.onclose = (event) => {
@@ -186,5 +218,6 @@ const openSocket = (initialCreateRequest: Message) => {
 
 const closeSocket = () => {
   console.log('socket closed');
+
   ws?.close();
 };
