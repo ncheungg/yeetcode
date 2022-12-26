@@ -14,6 +14,7 @@ const createSidebar = (): boolean => {
 
   // place to insert
   document.body.style.setProperty('width', '80%');
+  document.body.style.setProperty('max-width', 'calc(100%-300px)');
 
   const sidebar = document.createElement('div');
   sidebar.style.setProperty('id', 'yeetcode-sidebar');
