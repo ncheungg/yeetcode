@@ -1,12 +1,8 @@
-
-.sidebar {
+.yeetcode-sidebar {
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: Helvetica, sans-serif;
-  margin: 0;
-  padding: 0;
-  box-sizing: inherit;
   width: 20%;
   height: 100%;
   z-index: 9000000000000000000;
@@ -124,7 +120,7 @@
 }
 .msger-send-btn {
   margin-left: 10px;
-  background: rgb(0, 196, 65);
+  background: rgb(0, 196, 65)  !important;
   color: #fff;
   font-weight: bold;
 }

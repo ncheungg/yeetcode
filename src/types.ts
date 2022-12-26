@@ -40,6 +40,7 @@ export interface MessageParams {
   problem?: Problem;
   userInfo?: UserInfo;
   isInRoom?: boolean;
+  chatHistory?: ChatMessage[];
 }
 
 export interface Message {
@@ -95,4 +96,9 @@ export interface UserToRoom {
 export interface UserInfo {
   userId?: string;
   avatarUrl?: string | null;
+}
+
+export interface ChatMessage {
+  message: Message;
+  isOutgoing: boolean;
 }

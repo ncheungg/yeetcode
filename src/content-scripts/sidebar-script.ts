@@ -1,4 +1,10 @@
-import { Message, MessageType, MessageTypeInternal } from '../types';
+import {
+  Message,
+  MessageType,
+  MessageTypeInternal,
+  MessageParams,
+  ChatMessage,
+} from '../types';
 
 console.log('got to sidebar-script');
 
@@ -10,15 +16,15 @@ const createSidebar = (): boolean => {
   document.body.style.setProperty('width', '80%');
 
   const sidebar = document.createElement('div');
-  sidebar.style.setProperty('id', 'sidebar');
-  sidebar.classList.add('sidebar');
+  sidebar.style.setProperty('id', 'yeetcode-sidebar');
+  sidebar.classList.add('yeetcode-sidebar');
 
   // the fukin sidebar html
   const sidebarHtml: string = `<section class="msger">
     <header class="msger-header">
       <div class="msger-header-title">Yeetcode</div>
       <div class="msger-header-options">
-        <form><button type="submit" class="msger-send-btn">Ready</button></form>
+        <form id="yeetcode-ready"><button type="submit" class="msger-send-btn">Ready</button></form>
       </div>
     </header>
     <main class="msger-chat" id="yeetcode-chat">
@@ -38,36 +44,47 @@ const createSidebar = (): boolean => {
 
   sidebar.innerHTML = sidebarHtml;
 
-  const form = document.getElementById(
+  const messageForm = document.getElementById(
     'yeetcode-msger-form'
   ) as HTMLFormElement;
-  const input = document.getElementById(
+  const messageInput = document.getElementById(
     'yeetcode-msger-input'
   ) as HTMLInputElement;
 
-  console.log('form', form);
-
   // event listener for user submitted messages
-  form.addEventListener('submit', (e) => {
+  messageForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const text = input?.value;
+    const text = messageInput?.value;
     if (!text) return;
 
+    const ts = new Date();
     const message: Message = {
       type: MessageType.Message,
       params: { message: text },
-      ts: new Date(),
+      ts,
     };
     chrome.runtime.sendMessage(message);
 
-    const messageHTML = createMessage(YOU, new Date(), text);
+    outgoingChat(text, ts);
 
-    const chat = document.getElementById('yeetcode-chat') as HTMLFormElement;
-    chat.insertAdjacentHTML('beforeend', messageHTML);
-    chat.scrollTop += 500;
+    messageInput.value = '';
+  });
 
-    input.value = '';
+  const readyForm = document.getElementById(
+    'yeetcode-ready'
+  ) as HTMLFormElement;
+
+  readyForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const message: Message = {
+      type: MessageType.Ready,
+      params: {},
+      ts: new Date(),
+    };
+
+    chrome.runtime.sendMessage(message);
   });
 
   return true;
@@ -85,7 +102,7 @@ function createMessage(
   isIncoming: boolean = false,
   italics: boolean = false
 ) {
-  //   Simple solution for small apps
+  if (!username) username = '';
   var ts = new Date(timestamp as unknown as string);
 
   var text = message;
@@ -109,6 +126,42 @@ function createMessage(
 
   return msgHTML;
 }
+const outgoingChat = (text: string, ts: Date) => {
+  const messageHTML = createMessage(YOU, ts, text);
+  const chat = document.getElementById('yeetcode-chat') as HTMLFormElement;
+  chat.insertAdjacentHTML('beforeend', messageHTML);
+  chat.scrollTop += 500;
+};
+
+const incomingChat = (
+  text: string,
+  username: string,
+  timestamp: Date,
+  italics: boolean = false
+) => {
+  const messageHTML = createMessage(username, timestamp, text, true, italics);
+  const chat = document.getElementById('yeetcode-chat') as HTMLFormElement;
+  chat.insertAdjacentHTML('beforeend', messageHTML);
+  chat.scrollTop += 500;
+};
+
+const restoreChatHistory = (chatHistory: ChatMessage[] | undefined) => {
+  if (!chatHistory) return;
+  for (const chatMessage of chatHistory) {
+    let { type, params, ts } = chatMessage.message;
+    let { message, userInfo } = params as MessageParams;
+
+    let text = message as string;
+    let username = userInfo?.userId as string;
+    let italics = type == MessageType.Action;
+
+    if (chatMessage.isOutgoing) {
+      outgoingChat(text, ts);
+    } else {
+      incomingChat(text, username, ts, italics);
+    }
+  }
+};
 
 chrome.runtime.onMessage.addListener(
   (request: Message, sender, sendResponse) => {
@@ -118,11 +171,36 @@ chrome.runtime.onMessage.addListener(
       case MessageTypeInternal.FetchIsInRoomState:
         if (params?.isInRoom) {
           createSidebar();
+
+          // add history
+          const chatHistory = params.chatHistory;
+          restoreChatHistory(chatHistory);
         } else {
           removeSidebar();
         }
         break;
+      case MessageType.Message:
+        var { message, userInfo } = params as MessageParams;
 
+        var userName = userInfo?.userId as string;
+
+        incomingChat(message as string, userName, ts);
+        break;
+
+      case MessageType.Action:
+        var { message } = params as MessageParams;
+
+        console.log(message);
+        incomingChat(message as string, '', ts, true);
+        break;
+      case MessageType.StartGame:
+        // set timer
+
+        break;
+      case MessageType.EndGame:
+        // clear timer
+
+        break;
       default:
         console.error(`Error: could not process action of type ${type}`);
     }

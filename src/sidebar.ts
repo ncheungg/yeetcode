@@ -180,7 +180,7 @@ function createForm() {
 
   var input = document.createElement('input');
   input.setAttribute('type', 'text');
-  input.setAttribute('placeholder', 'Enter your message...');
+  input.setAttribute('placeholder', 'Enter message...');
   input.classList.add('msger-input');
 
   var button = document.createElement('button');

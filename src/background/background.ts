@@ -7,6 +7,7 @@ import {
   UserInfo,
   Problem,
   MessageTypeInternal,
+  ChatMessage,
 } from '../types';
 
 import { HOST, PORT } from '../consts';
@@ -16,21 +17,10 @@ let isInRoomState: boolean = false;
 let roomIdState: string | undefined;
 let url: URL | undefined;
 let userInfo: UserInfo | undefined;
+let chatHistory: ChatMessage[] = [];
 
 // connect to websocket
 var ws: WebSocket | null = null;
-
-// sends message to activate tab's content script
-const sendMessageToContentScript = (message: Message): void => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (!tabs[0].id) {
-      console.error(`Error: could not send message to tab ${tabs[0]}`);
-      return;
-    }
-
-    chrome.tabs.sendMessage(tabs[0].id, message);
-  });
-};
 
 // programmatically switch popup file based on states
 const switchPopup = (): void => {
@@ -46,15 +36,18 @@ const switchPopup = (): void => {
     chrome.action.setPopup({ popup: 'not-leetcode.html' });
   }
 };
-const getTab = async (): Promise<string | undefined> => {
+const getTab = async () => {
   const tabs = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true,
   });
-  return tabs[0].url;
+  return tabs[0];
 };
+
 chrome.tabs.onActivated.addListener(async () => {
-  const tabUrl = await getTab();
+  const tab = await getTab();
+  const tabUrl = tab.url;
+
   if (!tabUrl) return;
 
   url = new URL(tabUrl);
@@ -68,12 +61,11 @@ chrome.runtime.onMessage.addListener(
     const { type, params } = request;
 
     console.log(request);
+    if (type != MessageTypeInternal.FetchUserInfo && request.params)
+      request.params.userInfo = userInfo;
 
     switch (type) {
       case MessageType.Create:
-        if (request.params) request.params.userInfo = userInfo;
-
-        // injectSidebar();
         isInRoomState = true;
         injectSidebar2();
         openSocket(request);
@@ -84,9 +76,8 @@ chrome.runtime.onMessage.addListener(
       case MessageType.Leave:
         break;
       case MessageType.Message:
-        if (request.params) request.params.userInfo = userInfo;
+        chatHistory.push({ message: request, isOutgoing: true });
         ws?.send(JSON.stringify(request));
-
         break;
 
       case MessageType.Hint:
@@ -127,6 +118,7 @@ chrome.runtime.onMessage.addListener(
           type: MessageTypeInternal.FetchIsInRoomState,
           params: {
             isInRoom: isInRoomState,
+            chatHistory,
           },
           ts: new Date(),
         };
@@ -139,17 +131,12 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
-const getTabId = async () => {
-  let queryOptions = { active: true, lastFocusedWindow: true };
-  const [tab] = await chrome.tabs.query(queryOptions);
-  return tab.id as number;
-};
-
 const injectSidebar2 = () => {
   const roomStateMessage: Message = {
     type: MessageTypeInternal.FetchIsInRoomState,
     params: {
       isInRoom: isInRoomState,
+      chatHistory,
     },
     ts: new Date(),
   };
@@ -158,23 +145,10 @@ const injectSidebar2 = () => {
   // should do more here idfk
 };
 
-// TODO:: call this function on message recieved from popup
-const injectSidebar = async () => {
-  let tabId = await getTabId();
+const sendMessageToContentScript = async (message: Message) => {
+  const tab = await getTab();
+  const tabId = tab.id as number;
 
-  chrome.scripting.executeScript({
-    target: { tabId },
-    files: ['sidebar.js'],
-  });
-};
-
-const sendMessageToSidebar = async (message: Message) => {
-  let tabId = await getTabId();
-  // const message: Message = {
-  //   type: MessageType.ChatMessage,
-  //   params: { message: text, userInfo: { userId } },
-  //   ts,
-  // };
   await chrome.tabs.sendMessage(tabId, message);
 };
 
@@ -199,6 +173,14 @@ const wsMessageHandler = (msg: MessageEvent<any>) => {
       const urlString = url as string;
 
       chrome.tabs.update({ url: urlString });
+      break;
+    case MessageType.Action:
+      chatHistory.push({ message, isOutgoing: false });
+      sendMessageToContentScript(message);
+      break;
+    case MessageType.Message:
+      chatHistory.push({ message, isOutgoing: false });
+      sendMessageToContentScript(message);
       break;
     default:
       console.error(`Error: could not process action of type ${type}`);
