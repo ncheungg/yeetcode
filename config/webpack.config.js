@@ -9,12 +9,14 @@ const PATHS = require('./paths');
 const config = (env, argv) =>
   merge(common, {
     entry: {
-      popup: PATHS.src + '/popup.ts',
-      'content-script': PATHS.src + '/content-script.ts',
-      background: PATHS.src + '/background.ts',
+      'not-in-room': PATHS.src + '/popup/not-in-room.ts',
+      'content-script': PATHS.src + '/content-scripts/content-script.ts',
+      background: PATHS.src + '/background/background.ts',
       sidebar: PATHS.src + '/sidebar.ts',
-      'userid-script': PATHS.src + '/userid-script.ts',
-      'not-logged-in': PATHS.src + '/not-logged-in.ts',
+      'userid-script': PATHS.src + '/content-scripts/userid-script.ts',
+      'not-logged-in': PATHS.src + '/popup/not-logged-in.ts',
+      'sidebar-script': PATHS.src + '/content-scripts/sidebar-script.ts',
+      popup: PATHS.src + '/popup/popup.css',
     },
     devtool: argv.mode === 'production' ? false : 'source-map',
   });

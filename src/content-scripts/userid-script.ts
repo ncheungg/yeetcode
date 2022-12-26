@@ -1,7 +1,7 @@
 'use strict';
 
-import { Message, MessageType, UserInfo } from './types';
-import { delay } from './utils';
+import { Message, MessageTypeInternal, UserInfo } from '../types';
+import { delay } from '../utils';
 
 const getUserInfo = (): UserInfo => {
   // css for profile dropdown, makes it invisible when we're programmatically clicking it
@@ -24,7 +24,7 @@ const getUserInfo = (): UserInfo => {
   )[0];
   const avatarUrl: string | null = avatarElement?.getAttribute('src');
   const avatarButton =
-    avatarElement.parentElement?.parentElement?.parentElement;
+    avatarElement?.parentElement?.parentElement?.parentElement;
 
   avatarButton?.click();
 
@@ -66,7 +66,7 @@ const getUserInfo = (): UserInfo => {
   }
 
   const message: Message = {
-    type: MessageType.FetchUserInfo,
+    type: MessageTypeInternal.FetchUserInfo,
     params: {
       userInfo,
     },

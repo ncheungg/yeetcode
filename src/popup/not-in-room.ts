@@ -1,7 +1,7 @@
 'use strict';
 
 import './popup.css';
-import { Message, MessageType } from './types';
+import { Message, MessageType } from '../types';
 
 function injectSidebar() {
   const message: Message = {

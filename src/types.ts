@@ -17,7 +17,12 @@ export enum MessageType {
   StartGame,
   EndGame,
   Forfeit,
-  FetchUserInfo,
+}
+
+// start internal types enum at 1000 to avoid conflict with MessageType
+export enum MessageTypeInternal {
+  FetchUserInfo = 1000,
+  FetchIsInRoomState,
 }
 
 export enum UserGameState {
@@ -34,10 +39,11 @@ export interface MessageParams {
   message?: string;
   problem?: Problem;
   userInfo?: UserInfo;
+  isInRoom?: boolean;
 }
 
 export interface Message {
-  type: MessageType;
+  type: MessageType | MessageTypeInternal;
   params?: MessageParams;
   ts: Date;
 }

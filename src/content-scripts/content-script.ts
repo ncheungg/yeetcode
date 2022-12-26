@@ -1,7 +1,7 @@
 'use strict';
 
-import { Message, MessageType } from './types';
-import { delay } from './utils';
+import { Message, MessageType } from '../types';
+import { delay } from '../utils';
 
 const getSubmitButton = (): Element | undefined => {
   for (const btn of document.getElementsByTagName('button')) {
