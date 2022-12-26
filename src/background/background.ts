@@ -72,6 +72,9 @@ chrome.runtime.onMessage.addListener(
 
         break;
       case MessageType.Join:
+        isInRoomState = true;
+        injectSidebar();
+        openSocket(request);
         break;
       case MessageType.Leave:
         break;
@@ -191,13 +194,13 @@ const wsMessageHandler = (msg: MessageEvent<any>) => {
   }
 };
 
-const openSocket = (initialCreateRequest: Message): void => {
+const openSocket = (initialRequest: Message): void => {
   ws = new WebSocket(`ws://${HOST}:${PORT}`);
   console.log('Attempting Connection...', ws);
 
   ws.onopen = () => {
     console.log('Successfully Connected');
-    ws?.send(JSON.stringify(initialCreateRequest));
+    ws?.send(JSON.stringify(initialRequest));
   };
 
   ws.onmessage = (msg) => {
