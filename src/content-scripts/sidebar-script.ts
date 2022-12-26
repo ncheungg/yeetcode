@@ -2,6 +2,7 @@ import { Message, MessageType, MessageTypeInternal } from '../types';
 
 console.log('got to sidebar-script');
 
+const YOU = 'you';
 const createSidebar = (): boolean => {
   console.log('created sidebar');
 
@@ -9,6 +10,7 @@ const createSidebar = (): boolean => {
   document.body.style.setProperty('width', 'calc(100% - 350px)');
 
   const iframe = document.createElement('iframe');
+  iframe.style.setProperty('id', 'sidebar');
   iframe.style.setProperty('width', '350px');
   iframe.style.setProperty('height', '100%');
   iframe.style.setProperty('top', '0px');
@@ -24,7 +26,7 @@ const createSidebar = (): boolean => {
         <form><button type="submit" class="msger-send-btn">Ready</button></form>
       </div>
     </header>
-    <main class="msger-chat">
+    <main class="msger-chat" id="yeetcode-chat">
       
     </main>
     <form class="msger-inputarea" id="yeetcode-msger-form">
@@ -32,7 +34,7 @@ const createSidebar = (): boolean => {
         type="text"
         placeholder="Enter your message..."
         class="msger-input"
-        id="yeetcode-msger-form"
+        id="yeetcode-msger-input"
       /><button type="submit" class="msger-send-btn">Send</button>
     </form>
   </section>`;
@@ -46,12 +48,16 @@ const createSidebar = (): boolean => {
     return false;
   }
 
-  const form = document.getElementById(
-    'yeetcode-msger-input'
-  ) as HTMLFormElement;
-  const input = document.getElementById(
+  var iframeDoc = iframe?.contentWindow?.document;
+
+  const form = iframeDoc.getElementById(
     'yeetcode-msger-form'
+  ) as HTMLFormElement;
+  const input = iframeDoc.getElementById(
+    'yeetcode-msger-input'
   ) as HTMLInputElement;
+
+  console.log('form', form);
 
   // event listener for user submitted messages
   form.addEventListener('submit', (e) => {
@@ -67,6 +73,12 @@ const createSidebar = (): boolean => {
     };
     chrome.runtime.sendMessage(message);
 
+    const messageHTML = createMessage(YOU, new Date(), text);
+
+    const chat = iframeDoc.getElementById('yeetcode-chat') as HTMLFormElement;
+    chat.insertAdjacentHTML('beforeend', messageHTML);
+    chat.scrollTop += 500;
+
     input.value = '';
   });
 
@@ -77,6 +89,38 @@ const removeSidebar = (): boolean => {
   console.log('removed sidebar');
   return true;
 };
+
+function createMessage(
+  username: string,
+  timestamp: Date,
+  message: string,
+  isIncoming: boolean = false,
+  italics: boolean = false
+) {
+  //   Simple solution for small apps
+  var ts = new Date(timestamp as unknown as string);
+
+  var text = message;
+
+  if (italics) {
+    text = `<i>${message}</i>`;
+  }
+  const msgHTML = `
+      <div class="msg ${isIncoming ? 'left' : 'right'}-msg">
+  
+        <div class="msg-bubble">
+          <div class="msg-info">
+            <div class="msg-info-name">${username}</div>
+            <div class="msg-info-time">${ts.toLocaleTimeString()}</div>
+          </div>
+  
+          <div class="msg-text">${text}</div>
+        </div>
+      </div>
+    `;
+
+  return msgHTML;
+}
 
 chrome.runtime.onMessage.addListener(
   (request: Message, sender, sendResponse) => {
