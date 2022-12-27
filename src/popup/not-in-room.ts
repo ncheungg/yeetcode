@@ -9,10 +9,9 @@ function createRoom() {
     params: {},
     ts: new Date(),
   };
+  chrome.runtime.sendMessage(message);
 
-  chrome.runtime.sendMessage(message, function (response) {
-    console.log(response);
-  });
+  window.close();
 }
 
 function joinRoom() {
@@ -24,10 +23,7 @@ function joinRoom() {
     params: { roomId: id },
     ts: new Date(),
   };
-
-  chrome.runtime.sendMessage(message, function (response) {
-    console.log(response);
-  });
+  chrome.runtime.sendMessage(message);
 
   input.value = '';
 }

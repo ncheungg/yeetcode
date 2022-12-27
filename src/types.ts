@@ -23,6 +23,8 @@ export enum MessageType {
 export enum MessageTypeInternal {
   FetchUserInfo = 1000,
   FetchIsInRoomState,
+  JoinWithUrl,
+  FetchRoomId,
 }
 
 export enum UserGameState {
