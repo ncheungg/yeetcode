@@ -24,12 +24,14 @@ const createSidebar = (): boolean => {
   const sidebarHtml: string = `<section class="msger">
     <header class="msger-header">
       <div class="msger-header-title">Yeetcode</div>
+      <p id="yeetcode-timer">00m 00s</p>  
       <div class="msger-header-options">
-        <form id="yeetcode-ready"><button type="submit" id="yeetcode-ready-button" class="msger-send-btn">Ready</button></form>
+      
+      <form id="yeetcode-ready"><button type="submit" id="yeetcode-ready-button" class="msger-send-btn">Ready</button></form>
       </div>
     </header>
     <main class="msger-chat" id="yeetcode-chat">
-    <p id="yeetcode-timer">00m 00s</p>
+    
       
     </main>
     <form class="msger-inputarea" id="yeetcode-msger-form">
@@ -120,9 +122,13 @@ function createMessage(
         <div class="msg-bubble">
           <div class="msg-info">
             <div class="msg-info-name">${username}</div>
-            <div class="msg-info-time">${ts.toLocaleTimeString()}</div>
+            <div class="msg-info-time">${ts.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}</div>
+           
           </div>
-  
+
           <div class="msg-text">${text}</div>
         </div>
       </div>

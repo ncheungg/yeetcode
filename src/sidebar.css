@@ -91,13 +91,17 @@
   border-bottom-left-radius: 0;
 }
 
-.right-msg {
-  flex-direction: row-reverse;
+.msg-text {
+  padding-left: 5px;
 }
+
+/* .right-msg {
+  flex-direction: row-reverse;
+} */
 .right-msg .msg-bubble {
   background: #579ffb;
   color: #fff;
-  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
 }
 .right-msg .msg-img {
   margin: 0 0 0 10px;
