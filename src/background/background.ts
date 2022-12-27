@@ -235,17 +235,21 @@ const wsMessageHandler = async (msg: MessageEvent<any>) => {
       chrome.tabs.update({ url: urlString });
       sendMessageToContentScript(message);
       break;
+
     case MessageType.EndGame:
       sendMessageToContentScript(message);
       break;
+
     case MessageType.Action:
       chatHistory.push({ message, isOutgoing: false });
       sendMessageToContentScript(message);
       break;
+
     case MessageType.Message:
       chatHistory.push({ message, isOutgoing: false });
       sendMessageToContentScript(message);
       break;
+
     default:
       console.error(`Error: could not process action of type ${type}`);
   }
