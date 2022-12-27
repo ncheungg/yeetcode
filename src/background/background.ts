@@ -9,7 +9,7 @@ import {
   MessageTypeInternal,
   ChatMessage,
 } from '../types';
-import { HOST, PORT } from '../consts';
+import { HOST } from '../consts';
 
 // set initial popup
 chrome.action.setPopup({ popup: 'not-leetcode.html' });
@@ -252,7 +252,7 @@ const wsMessageHandler = async (msg: MessageEvent<any>) => {
 };
 
 const openSocket = (initialRequest: Message): void => {
-  ws = new WebSocket(`ws://${HOST}:${PORT}`);
+  ws = new WebSocket(`wss://${HOST}`);
   console.log('Attempting Connection...', ws);
 
   ws.onopen = () => {
