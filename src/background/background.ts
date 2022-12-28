@@ -9,10 +9,7 @@ import {
   MessageTypeInternal,
   ChatMessage,
 } from '../types';
-import { HOST } from '../consts';
-
-// set initial popup
-chrome.action.setPopup({ popup: 'not-leetcode.html' });
+import { WS_HOST } from '../consts';
 
 // states
 let isInRoomState: boolean = false;
@@ -66,6 +63,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   url = new URL(tab.url);
   switchPopup();
 });
+
+// set initial popup
+chrome.action.setPopup({ popup: 'not-leetcode.html' });
 
 // handles messages sent by popup, content-scripts, and backend
 chrome.runtime.onMessage.addListener(
@@ -256,7 +256,7 @@ const wsMessageHandler = async (msg: MessageEvent<any>) => {
 };
 
 const openSocket = (initialRequest: Message): void => {
-  ws = new WebSocket(`wss://${HOST}`);
+  ws = new WebSocket(`wss://${WS_HOST}`);
   console.log('Attempting Connection...', ws);
 
   ws.onopen = () => {

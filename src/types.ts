@@ -1,39 +1,39 @@
 'use strict';
 
 export enum MessageType {
-  Create,
-  Join,
-  Leave,
-  Message,
-  Hint,
-  Discussion,
-  Solutions,
-  Submit,
-  Finished,
-  Failed,
-  Action,
-  Ready,
-  Unready,
-  StartGame,
-  EndGame,
-  Forfeit,
+  Create = 'Create',
+  Join = 'Join',
+  Leave = 'Leave',
+  Message = 'Message',
+  Hint = 'Hint',
+  Discussion = 'Discussion',
+  Solutions = 'Solutions',
+  Submit = 'Submit',
+  Finished = 'Finished',
+  Failed = 'Failed',
+  Action = 'Action',
+  Ready = 'Ready',
+  Unready = 'Unready',
+  StartGame = 'StartGame',
+  EndGame = 'EndGame',
+  Forfeit = 'Forfeit',
 }
 
 // start internal types enum at 1000 to avoid conflict with MessageType
 export enum MessageTypeInternal {
-  FetchUserInfo = 1000,
-  FetchIsInRoomState,
-  JoinWithUrl,
-  FetchRoomId,
+  FetchUserInfo = 'FetchUserInfo',
+  FetchIsInRoomState = 'FetchIsInRoomState',
+  JoinWithUrl = 'JoinWithUrl',
+  FetchRoomId = 'FetchRoomId',
 }
 
 export enum UserGameState {
-  Ready,
-  Unready,
-  Playing,
-  Spectating,
-  Finished,
-  Forfeited,
+  Ready = 'Ready',
+  Unready = 'Unready',
+  Playing = 'Playing',
+  Spectating = 'Spectating',
+  Finished = 'Finished',
+  Forfeited = 'Forfeited',
 }
 
 export interface MessageParams {
@@ -52,9 +52,9 @@ export interface Message {
 }
 
 export enum ProblemDifficulty {
-  Easy,
-  Medium,
-  Hard,
+  Easy = 'Easy',
+  Medium = 'Medium',
+  Hard = 'Hard',
 }
 
 export interface Problem {
