@@ -1,4 +1,4 @@
-import { HOST, PORT } from '../consts';
+import { HOST } from '../consts';
 import { Message, MessageParams, MessageTypeInternal } from '../types';
 
 chrome.runtime.onMessage.addListener(
@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener(
     switch (type) {
       case MessageTypeInternal.FetchRoomId:
         const { roomId } = params as MessageParams;
-        const url = `${HOST}:${PORT}/join/${roomId}`;
+        const url = `https://${HOST}/join/${roomId}`;
 
         const p = document.getElementById('join-room-url');
         if (p) p.innerHTML = url;

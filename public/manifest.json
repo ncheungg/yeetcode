@@ -37,7 +37,7 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://*.localhost/join/*"],
+      "matches": ["*://*.yeetco.de/join/*"],
       "js": ["join-room-script.js"],
       "run_at": "document_idle"
     }
